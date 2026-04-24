@@ -1,0 +1,45 @@
+# Build products
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+!CMakeLists.txt
+
+# Native binaries and transient files
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+*.lib
+*.a
+*.pdb
+*.ilk
+
+# Generated benchmark output
+results/**
+!results/
+!results/.gitkeep
+logs/**
+!logs/
+!logs/.gitkeep
+plots/**
+!plots/
+!plots/.gitkeep
+
+# Logs and local environment
+*.log
+.env
+.env.*
+!.env.example
+
+# Editor and OS noise
+.vscode/
+.idea/
+.vs/
+*.swp
+Thumbs.db
+.DS_Store
