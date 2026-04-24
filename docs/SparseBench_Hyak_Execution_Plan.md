@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The next blocker is data ingestion: SuiteSparse download currently fails because of a `curl` / `git-remote-https` OpenSSL/Kerberos runtime-linker issue, so the last successful Slurm smoke used the planned `diag5.mtx` fallback. That validates the Slurm/environment/log/result path, not sparse benchmark performance. The execution plan was committed locally as `d107441`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits.
+**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d107441`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Validation downloaded five real SuiteSparse matrices, but the v0.1 manifest was empty because the headers were `real symmetric`, `pattern general`, and `pattern symmetric`, not `coordinate real general`. Parser v0.1.1 is therefore the next blocking gate before the real `cpu-g2` smoke.
 
 ---
 
@@ -320,6 +320,34 @@ Then replace direct `curl` calls with:
 
 ```bash
 download_file "$url" "${name}.tar.gz"
+```
+
+### 6.4.1 Implementation record
+
+Local implementation status:
+
+- `scripts/download_suitesparse.sh` now uses `download_file URL OUT`.
+- Downloader fallback order is `wget`, then `env -u LD_LIBRARY_PATH curl`, then `python3 urllib`.
+- Failed downloader attempts remove the partial output before trying the next downloader.
+- Manifest output remains `${SPARSEBENCH_SCRATCH}/data/small_matrices.txt`, defaulting to `/gscratch/scrubbed/$USER/sparsebench/data/small_matrices.txt`.
+- Manifest filtering still accepts only `%%MatrixMarket matrix coordinate real general`, with carriage returns stripped before header comparison.
+
+Validation to record after execution:
+
+```text
+bash -n scripts/download_suitesparse.sh: passed
+clean downloader command: env -u LD_LIBRARY_PATH -u LIBRARY_PATH -u CPATH -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u PKG_CONFIG_PATH SPARSEBENCH_SCRATCH=/gscratch/scrubbed/$USER/sparsebench bash scripts/download_suitesparse.sh
+download result: wget succeeded for 5 SuiteSparse tarballs
+manifest path: /gscratch/scrubbed/junyej/sparsebench/data/small_matrices.txt
+matrix count: 0 under the v0.1 coordinate-real-general filter
+sample headers:
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx: %%MatrixMarket matrix coordinate real symmetric
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/494_bus/494_bus.mtx: %%MatrixMarket matrix coordinate real symmetric
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/662_bus/662_bus.mtx: %%MatrixMarket matrix coordinate real symmetric
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/ash958/ash958.mtx: %%MatrixMarket matrix coordinate pattern general
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/bcspwr06/bcspwr06.mtx: %%MatrixMarket matrix coordinate pattern symmetric
+download errors, if any: none after escaping the sandbox write restriction; script exited 3 because no v0.1-supported headers remained
+next blocker: parser v0.1.1
 ```
 
 ### 6.5 Last resort: download locally, transfer to Hyak
