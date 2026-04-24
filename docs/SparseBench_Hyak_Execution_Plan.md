@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. SuiteSparse ingestion, parser v0.1.1, and real `cpu-g2` smoke have passed locally on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`, using `/gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx` with header `%%MatrixMarket matrix coordinate real symmetric`. CTest passed `3/3`, `.err` was empty, `spmv_t1/t2/t4/t8.csv` were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next gate is `cpu-g2-mem2x` 32-core pilot precheck/submission after GitHub credential sync is resolved or explicitly deferred.
+**Current status as of 2026-04-24.** The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. SuiteSparse ingestion, parser v0.1.1, and real `cpu-g2` smoke have passed locally on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`, using `/gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx` with header `%%MatrixMarket matrix coordinate real symmetric`. CTest passed `3/3`, `.err` was empty, `spmv_t1/t2/t4/t8.csv` were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` script now validates every manifest entry, rejects `diag5.mtx`, rejects unsupported headers, and runs CTest after build. The next gate is `cpu-g2-mem2x` 32-core pilot precheck/submission after GitHub credential sync is resolved or explicitly deferred.
 
 ---
 
@@ -725,6 +725,8 @@ Do not start this phase unless all are true:
 - `slurm/spmv_mem2x_scaling.slurm` passes `bash -n`.
 - `sbatch --test-only slurm/spmv_mem2x_scaling.slurm` passes.
 - Manifest is not the `diag5.mtx` fallback.
+- `slurm/spmv_mem2x_scaling.slurm` validates every manifest entry before build.
+- `slurm/spmv_mem2x_scaling.slurm` runs `ctest --test-dir "${BUILD_DIR}" --output-on-failure` after build.
 
 ### 10.3 Recommended pilot resource request
 

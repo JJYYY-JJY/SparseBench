@@ -41,8 +41,36 @@ if [[ ! -s "${MATRIX_LIST}" ]]; then
   exit 3
 fi
 
+while IFS= read -r matrix; do
+  [[ -z "${matrix}" ]] && continue
+
+  if [[ ! -f "${matrix}" ]]; then
+    echo "Matrix path is missing: ${matrix}" >&2
+    exit 4
+  fi
+
+  if [[ "${matrix}" == *"/data/tiny/diag5.mtx" ]]; then
+    echo "Refusing fallback diag5 matrix for mem2x run: ${matrix}" >&2
+    exit 5
+  fi
+
+  header="$(head -n 1 "${matrix}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
+  case "${header}" in
+    "%%matrixmarket matrix coordinate real general" | \
+      "%%matrixmarket matrix coordinate integer general" | \
+      "%%matrixmarket matrix coordinate pattern general" | \
+      "%%matrixmarket matrix coordinate real symmetric")
+      ;;
+    *)
+      echo "Unsupported Matrix Market header in ${matrix}: ${header}" >&2
+      exit 6
+      ;;
+  esac
+done < "${MATRIX_LIST}"
+
 cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
 cmake --build "${BUILD_DIR}" -j "${SLURM_CPUS_PER_TASK}"
+ctest --test-dir "${BUILD_DIR}" --output-on-failure
 
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
