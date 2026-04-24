@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The next blocker is data ingestion: SuiteSparse download currently fails because of a `curl` / `git-remote-https` OpenSSL/Kerberos runtime-linker issue, so the last successful Slurm smoke used the planned `diag5.mtx` fallback. That validates the Slurm/environment/log/result path, not sparse benchmark performance.
+**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The next blocker is data ingestion: SuiteSparse download currently fails because of a `curl` / `git-remote-https` OpenSSL/Kerberos runtime-linker issue, so the last successful Slurm smoke used the planned `diag5.mtx` fallback. That validates the Slurm/environment/log/result path, not sparse benchmark performance. The execution plan was committed locally as `d107441`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits.
 
 ---
 
