@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. SuiteSparse ingestion, parser v0.1.1, and real `cpu-g2` smoke have passed locally on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`, using `/gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx` with header `%%MatrixMarket matrix coordinate real symmetric`. CTest passed `3/3`, `.err` was empty, `spmv_t1/t2/t4/t8.csv` were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` script now validates every manifest entry, rejects `diag5.mtx`, rejects unsupported headers, and runs CTest after build. The 32-core `mem2x` pilot passed `bash -n` and `sbatch --test-only` with command-line overrides, but the real `mem2x` submission is intentionally held until GitHub credential sync is resolved or the push requirement is explicitly deferred.
+**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` are synchronized at `5dc9ef099d752f581a947a6bb9f6c1153e90c952`. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next benchmark step is the documented 96-core medium `cpu-g2-mem2x` run before any 192-thread/full scaling attempt.
 
 ---
 
@@ -24,9 +24,9 @@ This document covers:
 
 ### 1.2 Non-goals for the immediate next pass
 
-Do **not** do these until the real SuiteSparse `cpu-g2` smoke passes:
+Do **not** do these before reviewing the 32-core `cpu-g2-mem2x` pilot evidence and deciding the 96-core medium-run matrix set:
 
-- Do not submit `slurm/spmv_mem2x_scaling.slurm`.
+- Do not submit the 192-thread/full `cpu-g2-mem2x` run before a 96-core medium run.
 - Do not add CG, GMRES, Lanczos, or other algorithms.
 - Do not run performance conclusions from `diag5.mtx` fallback data.
 - Do not treat `hyakalloc-all` global idle resources as guaranteed availability for this account.
@@ -715,11 +715,11 @@ scp junyej@klone.hyak.uw.edu:/gscratch/scrubbed/junyej/sparsebench/sparsebench_s
 
 Verify that `cpu-g2-mem2x` scheduling, QOS, module stack, CTest, and OpenMP thread scaling work on a small real workload.
 
-### 10.2 Preconditions
+### 10.2 Pre-run checklist
 
-Do not start this phase unless all are true:
+The 32-core pilot started only after these were true:
 
-- GitHub contains the Slurm smoke-script commit.
+- Hyak `main`, local `origin/main`, and GitHub `main` were synchronized at `5dc9ef099d752f581a947a6bb9f6c1153e90c952`.
 - SuiteSparse manifest contains at least one real supported matrix.
 - Real SuiteSparse `cpu-g2` smoke has completed successfully.
 - `slurm/spmv_mem2x_scaling.slurm` passes `bash -n`.
@@ -730,29 +730,28 @@ Do not start this phase unless all are true:
 
 ### 10.3 Recommended pilot resource request
 
-Modify the mem2x script for the first pilot:
+Use command-line `sbatch` overrides for the first pilot instead of changing the tracked medium-run defaults in `slurm/spmv_mem2x_scaling.slurm`:
 
 ```bash
-#SBATCH --partition=cpu-g2-mem2x
-#SBATCH --qos=stf-cpu-g2-mem2x
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=128G
-#SBATCH --time=01:00:00
+sbatch --cpus-per-task=32 --mem=128G --time=01:00:00 slurm/spmv_mem2x_scaling.slurm
 ```
 
-Thread list:
+The checked-in script keeps the medium-run defaults:
 
 ```bash
-THREADS=(1 2 4 8 16 32)
+#SBATCH --cpus-per-task=96
+#SBATCH --mem=512G
+#SBATCH --time=04:00:00
+THREADS=(1 2 4 8 16 32 64 96)
 ```
 
-Matrix count:
+For the 32-core pilot, the script skips `64` and `96` because they exceed `SLURM_CPUS_PER_TASK=32`, so the effective thread list is:
 
-```text
-1–3 real SuiteSparse small matrices
+```bash
+1 2 4 8 16 32
 ```
+
+The pilot used all 4 current manifest entries.
 
 ### 10.4 Submission
 
@@ -771,9 +770,9 @@ Precheck record:
 
 ```text
 bash -n slurm/spmv_mem2x_scaling.slurm: passed
-sbatch --test-only --cpus-per-task=32 --mem=128G --time=01:00:00 slurm/spmv_mem2x_scaling.slurm: accepted as test job 34802855
-test-only placement: node n3445, partition cpu-g2-mem2x, 32 processors
-real pilot submission: held until GitHub push blocker is resolved or explicitly deferred
+sbatch --test-only --cpus-per-task=32 --mem=128G --time=01:00:00 slurm/spmv_mem2x_scaling.slurm: accepted as test job 34803035
+test-only placement: node n3443, partition cpu-g2-mem2x, 32 processors
+real pilot submission: submitted as job 34803037
 ```
 
 ### 10.5 Acceptance criteria
@@ -783,6 +782,34 @@ real pilot submission: held until GitHub push blocker is resolved or explicitly 
 - CSVs are produced for `1,2,4,8,16,32` threads.
 - No `GLIBCXX`, `libstdc++`, `libgomp`, OpenSSL, or Kerberos runtime-linker errors appear.
 - Results use real SuiteSparse matrices.
+
+Execution record:
+
+```text
+job id: 34803037
+commit printed by job: 5dc9ef099d752f581a947a6bb9f6c1153e90c952
+partition: cpu-g2-mem2x
+qos: stf-cpu-g2-mem2x
+requested resources: 32 CPUs, 128G, 01:00:00
+Slurm state: COMPLETED
+Slurm exit code: 0:0
+node: n3445
+start: 2026-04-24T02:31:34
+end: 2026-04-24T02:33:14
+elapsed: 00:01:40
+stdout: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34803037.out
+stderr: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34803037.err
+CTest: 3/3 tests passed
+.err status: empty
+runtime-linker errors: none observed
+result directory: /gscratch/scrubbed/junyej/sparsebench/results/mem2x_34803037/
+CSV count: 24
+matrices: 1138_bus, 494_bus, 662_bus, ash958
+thread coverage per matrix: 1,2,4,8,16,32
+repeat: 30
+CSV numeric status: finite checksum and positive timing/rate fields observed
+Phase 6 acceptance: passed
+```
 
 ---
 
@@ -933,6 +960,19 @@ tar -czf sparsebench_mem2x_${RUNID}.tar.gz package_mem2x_${RUNID}
 sha256sum sparsebench_mem2x_${RUNID}.tar.gz > sparsebench_mem2x_${RUNID}.sha256
 ```
 
+Pilot package record:
+
+```text
+RUNID: 34803037
+package directory: /gscratch/scrubbed/junyej/sparsebench/package_mem2x_34803037
+archive: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34803037.tar.gz
+archive size: 6.0K
+sha256: 16bf0aa5594f65172fc2b51909633db387f4bb1de919aed5ae6ce757c3be4e33
+checksum file: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34803037.sha256
+packaged commit: 5dc9ef099d752f581a947a6bb9f6c1153e90c952
+packaged contents: logs, results, slurm, scripts, git_commit.txt, environment.txt
+```
+
 ### 13.2 Download on Windows
 
 ```powershell
@@ -1032,14 +1072,13 @@ v0.6     NUMA and memory-placement experiments
 Current priority:
 
 ```text
-1. Sync Hyak commit to GitHub.
-2. Fix downloader or transfer SuiteSparse matrices manually.
-3. Build real SuiteSparse manifest.
-4. Run real SuiteSparse cpu-g2 smoke.
-5. Run mem2x 32-core pilot.
-6. Run mem2x 96/192-core scaling.
-7. Plot and document results.
-8. Add CG/Lanczos only after SpMV benchmark is stable.
+1. Review the 32-core mem2x pilot CSVs and package.
+2. Choose the 96-core medium-run matrix set.
+3. Run mem2x 96-core medium scaling.
+4. Review speedup/efficiency and runtime behavior.
+5. Run 192-thread/full scaling only after the medium run is stable.
+6. Plot and document results.
+7. Add CG/Lanczos only after SpMV benchmark is stable.
 ```
 
 ---
