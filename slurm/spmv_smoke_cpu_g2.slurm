@@ -2,6 +2,7 @@
 #SBATCH --job-name=sbpp-spmv-smoke
 #SBATCH --account=stf
 #SBATCH --partition=cpu-g2
+#SBATCH --qos=stf-cpu-g2
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -11,6 +12,8 @@
 #SBATCH --error=/gscratch/scrubbed/%u/sparsebench/logs/%x-%j.err
 
 set -euo pipefail
+
+module load cmake/3.25.1
 
 PROJECT_ROOT="${PROJECT_ROOT:-/gscratch/stf/${USER}/projects/SparseBench}"
 RUNROOT="${RUNROOT:-/gscratch/scrubbed/${USER}/sparsebench}"
@@ -22,11 +25,18 @@ OUT_DIR="${OUT_DIR:-${RUNROOT}/results/smoke_${SLURM_JOB_ID}}"
 cd "${PROJECT_ROOT}"
 mkdir -p "${OUT_DIR}"
 
+module list
+which cmake
+cmake --version
+which g++
+g++ --version
+
 echo "SparseBench++ CPU G2 smoke"
 date
 hostname
 echo "Project root: ${PROJECT_ROOT}"
 echo "Run root: ${RUNROOT}"
+echo "Build dir: ${BUILD_DIR}"
 echo "Binary: ${BIN}"
 echo "Matrix list: ${MATRIX_LIST}"
 git rev-parse HEAD || true
@@ -38,6 +48,7 @@ fi
 
 cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
 cmake --build "${BUILD_DIR}" -j "${SLURM_CPUS_PER_TASK}"
+ctest --test-dir "${BUILD_DIR}" --output-on-failure
 
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores

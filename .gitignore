@@ -43,3 +43,5 @@ plots/**
 *.swp
 Thumbs.db
 .DS_Store
+
+.codex/

@@ -2,6 +2,7 @@
 #SBATCH --job-name=sbpp-spmv-mem2x
 #SBATCH --account=stf
 #SBATCH --partition=cpu-g2-mem2x
+#SBATCH --qos=stf-cpu-g2-mem2x
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=96
@@ -11,6 +12,8 @@
 #SBATCH --error=/gscratch/scrubbed/%u/sparsebench/logs/%x-%j.err
 
 set -euo pipefail
+
+module load cmake/3.25.1
 
 PROJECT_ROOT="${PROJECT_ROOT:-/gscratch/stf/${USER}/projects/SparseBench}"
 RUNROOT="${RUNROOT:-/gscratch/scrubbed/${USER}/sparsebench}"
