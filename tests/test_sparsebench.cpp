@@ -94,6 +94,63 @@ void test_duplicate_entries_are_preserved() {
                         "duplicate5 serial spmv sums duplicate contributions");
 }
 
+void test_integer_general_parse_and_spmv() {
+    const auto matrix =
+        sparsebench::read_matrix_market_to_csr(data_path("integer5.mtx").string());
+
+    require(matrix.nrows == 5, "integer5 nrows");
+    require(matrix.ncols == 5, "integer5 ncols");
+    require(matrix.nnz == 5, "integer5 nnz");
+    require((matrix.row_ptr == std::vector<std::int64_t>{0, 1, 2, 3, 4, 5}),
+            "integer5 row_ptr");
+    require((matrix.col_idx == std::vector<std::int32_t>{0, 1, 2, 3, 4}),
+            "integer5 col_idx");
+
+    const std::vector<double> x(5, 1.0);
+    std::vector<double> y;
+    sparsebench::spmv_serial(matrix, x, y);
+    require_vector_near(y, {1.0, 2.0, 3.0, 4.0, 5.0}, "integer5 serial spmv");
+    require_near(sparsebench::checksum(y), 15.0, "integer5 checksum");
+}
+
+void test_pattern_general_parse_and_spmv() {
+    const auto matrix =
+        sparsebench::read_matrix_market_to_csr(data_path("pattern5.mtx").string());
+
+    require(matrix.nrows == 5, "pattern5 nrows");
+    require(matrix.ncols == 5, "pattern5 ncols");
+    require(matrix.nnz == 6, "pattern5 nnz");
+    require((matrix.row_ptr == std::vector<std::int64_t>{0, 2, 3, 4, 5, 6}),
+            "pattern5 row_ptr");
+    require((matrix.col_idx == std::vector<std::int32_t>{0, 2, 1, 0, 4, 3}),
+            "pattern5 col_idx");
+
+    const std::vector<double> x(5, 1.0);
+    std::vector<double> y;
+    sparsebench::spmv_serial(matrix, x, y);
+    require_vector_near(y, {2.0, 1.0, 1.0, 1.0, 1.0}, "pattern5 serial spmv");
+    require_near(sparsebench::checksum(y), 6.0, "pattern5 checksum");
+}
+
+void test_symmetric_real_expands_mirror_entries() {
+    const auto matrix =
+        sparsebench::read_matrix_market_to_csr(data_path("symmetric5.mtx").string());
+
+    require(matrix.nrows == 5, "symmetric5 nrows");
+    require(matrix.ncols == 5, "symmetric5 ncols");
+    require(matrix.nnz == 6, "symmetric5 expanded nnz");
+    require((matrix.row_ptr == std::vector<std::int64_t>{0, 2, 3, 4, 5, 6}),
+            "symmetric5 row_ptr");
+    require((matrix.col_idx == std::vector<std::int32_t>{0, 2, 4, 0, 3, 1}),
+            "symmetric5 col_idx");
+
+    const std::vector<double> x(5, 1.0);
+    std::vector<double> y;
+    sparsebench::spmv_serial(matrix, x, y);
+    require_vector_near(y, {7.0, 7.0, 5.0, 11.0, 7.0}, "symmetric5 serial spmv");
+    require_near(sparsebench::checksum(y), 37.0, "symmetric5 checksum");
+}
+
 void test_omp_matches_serial() {
     const auto matrix =
         sparsebench::read_matrix_market_to_csr(data_path("nonsym5.mtx").string());
@@ -114,14 +171,13 @@ void test_omp_matches_serial() {
     }
 }
 
-void test_reject_unsupported_symmetric() {
-    const auto path = std::filesystem::temp_directory_path() /
-                      "sparsebench_reject_symmetric.mtx";
+void require_rejects(const std::string& name,
+                     const std::string& contents,
+                     const std::string& message) {
+    const auto path = std::filesystem::temp_directory_path() / name;
     {
         std::ofstream out(path);
-        out << "%%MatrixMarket matrix coordinate real symmetric\n"
-            << "2 2 1\n"
-            << "1 1 1.0\n";
+        out << contents;
     }
 
     bool rejected = false;
@@ -131,7 +187,40 @@ void test_reject_unsupported_symmetric() {
         rejected = true;
     }
     std::filesystem::remove(path);
-    require(rejected, "symmetric Matrix Market files must be rejected in v0.1");
+    require(rejected, message);
+}
+
+void test_reject_unsupported_headers() {
+    require_rejects(
+        "sparsebench_reject_complex.mtx",
+        "%%MatrixMarket matrix coordinate complex general\n"
+        "2 2 1\n"
+        "1 1 1.0 0.0\n",
+        "complex Matrix Market files must be rejected");
+
+    require_rejects(
+        "sparsebench_reject_hermitian.mtx",
+        "%%MatrixMarket matrix coordinate real Hermitian\n"
+        "2 2 1\n"
+        "1 1 1.0\n",
+        "Hermitian Matrix Market files must be rejected");
+
+    require_rejects(
+        "sparsebench_reject_skew_symmetric.mtx",
+        "%%MatrixMarket matrix coordinate real skew-symmetric\n"
+        "2 2 1\n"
+        "1 2 1.0\n",
+        "skew-symmetric Matrix Market files must be rejected");
+
+    require_rejects(
+        "sparsebench_reject_array.mtx",
+        "%%MatrixMarket matrix array real general\n"
+        "2 2\n"
+        "1.0\n"
+        "2.0\n"
+        "3.0\n"
+        "4.0\n",
+        "array Matrix Market files must be rejected");
 }
 
 }  // namespace
@@ -141,8 +230,11 @@ int main() {
         test_diag5_parse_and_spmv();
         test_nonsym5_parse_and_spmv();
         test_duplicate_entries_are_preserved();
+        test_integer_general_parse_and_spmv();
+        test_pattern_general_parse_and_spmv();
+        test_symmetric_real_expands_mirror_entries();
         test_omp_matches_serial();
-        test_reject_unsupported_symmetric();
+        test_reject_unsupported_headers();
         std::cout << "sparsebench unit tests passed\n";
         return 0;
     } catch (const std::exception& ex) {

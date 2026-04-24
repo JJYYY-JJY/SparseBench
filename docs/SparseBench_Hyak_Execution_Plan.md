@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d107441`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Validation downloaded five real SuiteSparse matrices, but the v0.1 manifest was empty because the headers were `real symmetric`, `pattern general`, and `pattern symmetric`, not `coordinate real general`. Parser v0.1.1 is therefore the next blocking gate before the real `cpu-g2` smoke.
+**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Parser v0.1.1 has been implemented locally and the manifest now contains four real SuiteSparse matrices: three `real symmetric` inputs and one `pattern general` input. The next gate is compute-node build/CTest validation through the real `cpu-g2` smoke prechecks and job.
 
 ---
 
@@ -115,13 +115,16 @@ All `#SBATCH` directives must appear before the first non-comment, non-whitespac
 
 ### 3.4 Matrix Market parser rule
 
-The current parser supports only a limited Matrix Market subset. Until parser support is expanded, real-matrix gates must accept only:
+The parser supports a limited sparse Matrix Market subset. Real-matrix gates may accept only:
 
 ```text
 %%MatrixMarket matrix coordinate real general
+%%MatrixMarket matrix coordinate integer general
+%%MatrixMarket matrix coordinate pattern general
+%%MatrixMarket matrix coordinate real symmetric
 ```
 
-Other Matrix Market variants must either be skipped or supported explicitly in a later parser milestone.
+Other Matrix Market variants must either be skipped or supported explicitly in a later parser milestone. `complex`, Hermitian, skew-symmetric, pattern-symmetric, integer-symmetric, and array/dense files remain unsupported.
 
 ### 3.5 SuiteSparse rule
 
@@ -405,9 +408,9 @@ done < "$manifest"
 
 Decide whether to run only `coordinate real general` matrices or expand the parser before real benchmarks.
 
-### 7.2 Minimum current gate
+### 7.2 Supported-manifest gate
 
-Use this filter if parser remains unchanged:
+The manifest filter must include only parser-supported headers:
 
 ```bash
 manifest=/gscratch/scrubbed/$USER/sparsebench/data/small_matrices.txt
@@ -418,18 +421,23 @@ supported=/gscratch/scrubbed/$USER/sparsebench/data/supported_small_matrices.txt
 while IFS= read -r m; do
   [ -f "$m" ] || continue
   header="$(head -n 1 "$m" | tr -d '\r')"
-  if [ "$header" = "%%MatrixMarket matrix coordinate real general" ]; then
-    echo "$m" >> "$supported"
-  fi
+  case "$header" in
+    "%%MatrixMarket matrix coordinate real general" | \
+      "%%MatrixMarket matrix coordinate integer general" | \
+      "%%MatrixMarket matrix coordinate pattern general" | \
+      "%%MatrixMarket matrix coordinate real symmetric")
+      echo "$m" >> "$supported"
+      ;;
+  esac
 done < "$manifest"
 
 mv "$supported" "$manifest"
 cat "$manifest"
 ```
 
-### 7.3 Recommended parser v0.1.1
+### 7.3 Parser v0.1.1 implementation
 
-Before `cpu-g2-mem2x`, expand Matrix Market support to:
+The downloader validation triggered parser v0.1.1 because the initial SuiteSparse set contained zero `coordinate real general` matrices. Parser v0.1.1 expands Matrix Market support to:
 
 ```text
 coordinate integer general    -> parse values as double
@@ -446,9 +454,35 @@ skew-symmetric
 array / dense Matrix Market format
 ```
 
-### 7.4 Tests to add
+Implementation record:
 
-Add tiny fixtures:
+- `src/matrix_market.cpp` accepts `coordinate integer general` values as doubles.
+- `src/matrix_market.cpp` accepts `coordinate pattern general` with implicit value `1.0`.
+- `src/matrix_market.cpp` accepts `coordinate real symmetric` and inserts mirrored off-diagonal entries.
+- The parser validates declared file-entry count before symmetric expansion changes CSR `nnz`.
+- The downloader manifest filter now accepts the same parser-supported header set and still skips `pattern symmetric`.
+- Tiny fixtures were added for `integer5.mtx`, `pattern5.mtx`, and `symmetric5.mtx`.
+- Tests cover the new accepted formats and continued rejection of `complex`, Hermitian, skew-symmetric, and array/dense headers.
+
+Manifest regeneration record:
+
+```text
+bash -n scripts/download_suitesparse.sh: passed
+manifest path: /gscratch/scrubbed/junyej/sparsebench/data/small_matrices.txt
+matrix count after parser v0.1.1 filter: 4
+accepted:
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/494_bus/494_bus.mtx
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/662_bus/662_bus.mtx
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/ash958/ash958.mtx
+skipped:
+  /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/bcspwr06/bcspwr06.mtx: %%MatrixMarket matrix coordinate pattern symmetric
+CTest/build status: pending compute-node smoke job
+```
+
+### 7.4 Tests added
+
+Tiny fixtures:
 
 ```text
 data/tiny/integer5.mtx
@@ -456,7 +490,7 @@ data/tiny/pattern5.mtx
 data/tiny/symmetric5.mtx
 ```
 
-Add CTest cases verifying:
+CTest cases verify:
 
 - expected `nrows`, `ncols`, `nnz`
 - expected checksum for SpMV with deterministic `x`

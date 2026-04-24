@@ -1,6 +1,6 @@
-# SparseBench++ v0.1
+# SparseBench++ v0.1.1
 
-SparseBench++ v0.1 is being initialized as a small, reproducible sparse-matrix benchmark harness. The v0.1 goal is local correctness first: build the benchmark, run tiny deterministic SpMV cases, and only then scale the same workflow onto Hyak.
+SparseBench++ is being initialized as a small, reproducible sparse-matrix benchmark harness. The current goal is correctness first: build the benchmark, run tiny deterministic SpMV cases, and only then scale the same workflow onto Hyak.
 
 ## Repository Layout
 
@@ -42,7 +42,14 @@ Large SuiteSparse matrices should not be committed. Use scratch storage for down
 bash scripts/download_suitesparse.sh
 ```
 
-v0.1 only supports Matrix Market `coordinate real general`; the downloader filters the generated matrix list to that format.
+The parser supports these sparse Matrix Market formats:
+
+- `coordinate real general`
+- `coordinate integer general`
+- `coordinate pattern general`
+- `coordinate real symmetric`
+
+The downloader filters the generated matrix list to parser-supported formats.
 
 On Hyak, use:
 
@@ -67,9 +74,9 @@ sbatch slurm/spmv_mem2x_scaling.slurm
 
 Before submitting, confirm the binary name, matrix manifest, module stack, time limit, and memory request match the implemented benchmark and the current Hyak policy.
 
-## Implemented v0.1
+## Implemented
 
-- Matrix Market `coordinate real general` parser.
+- Matrix Market parser for real, integer, pattern, and real symmetric sparse inputs.
 - COO-to-CSR conversion with 1-based to 0-based index conversion.
 - Serial CSR SpMV.
 - OpenMP CSR SpMV when the compiler toolchain exposes OpenMP.

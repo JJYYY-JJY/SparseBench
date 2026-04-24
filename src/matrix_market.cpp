@@ -16,6 +16,11 @@ struct CooEntry {
     double value = 0.0;
 };
 
+struct MatrixMarketHeader {
+    bool pattern = false;
+    bool symmetric = false;
+};
+
 std::string lower_copy(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
@@ -37,7 +42,7 @@ bool next_data_line(std::istream& input, std::string& line) {
     return false;
 }
 
-void parse_header(const std::string& line, const std::string& path) {
+MatrixMarketHeader parse_header(const std::string& line, const std::string& path) {
     std::istringstream iss(line);
     std::string banner;
     std::string object;
@@ -61,14 +66,22 @@ void parse_header(const std::string& line, const std::string& path) {
         throw std::runtime_error(
             "Only Matrix Market coordinate matrices are supported: " + path);
     }
-    if (field != "real") {
-        throw std::runtime_error(
-            "Only Matrix Market real field is supported in v0.1: " + path);
+
+    if (field == "real" && symmetry == "general") {
+        return MatrixMarketHeader{};
     }
-    if (symmetry != "general") {
-        throw std::runtime_error(
-            "Only Matrix Market general symmetry is supported in v0.1: " + path);
+    if (field == "integer" && symmetry == "general") {
+        return MatrixMarketHeader{};
     }
+    if (field == "pattern" && symmetry == "general") {
+        return MatrixMarketHeader{true, false};
+    }
+    if (field == "real" && symmetry == "symmetric") {
+        return MatrixMarketHeader{false, true};
+    }
+
+    throw std::runtime_error(
+        "Unsupported Matrix Market header in v0.1.1: " + path);
 }
 
 CSRMatrix build_csr(std::int64_t nrows,
@@ -113,7 +126,7 @@ CSRMatrix read_matrix_market_to_csr(const std::string& path) {
     if (!std::getline(input, line)) {
         throw std::runtime_error("Empty Matrix Market file: " + path);
     }
-    parse_header(line, path);
+    const auto header = parse_header(line, path);
 
     if (!next_data_line(input, line)) {
         throw std::runtime_error("Missing Matrix Market size line: " + path);
@@ -133,21 +146,32 @@ CSRMatrix read_matrix_market_to_csr(const std::string& path) {
     if (nrows <= 0 || ncols <= 0 || declared_nnz < 0) {
         throw std::runtime_error("Invalid Matrix Market dimensions: " + path);
     }
+    if (header.symmetric && nrows != ncols) {
+        throw std::runtime_error("Symmetric Matrix Market files must be square: " + path);
+    }
     if (ncols > std::numeric_limits<std::int32_t>::max()) {
         throw std::runtime_error("Matrix has too many columns for int32 col_idx: " + path);
     }
 
     std::vector<CooEntry> entries;
-    entries.reserve(static_cast<std::size_t>(declared_nnz));
+    entries.reserve(static_cast<std::size_t>(
+        declared_nnz * (header.symmetric ? 2 : 1)));
 
+    std::int64_t file_entries = 0;
     while (next_data_line(input, line)) {
         std::int64_t row = 0;
         std::int64_t col = 0;
-        double value = 0.0;
+        double value = 1.0;
         std::string extra;
         std::istringstream entry_line(line);
-        if (!(entry_line >> row >> col >> value) || (entry_line >> extra)) {
-            throw std::runtime_error("Malformed Matrix Market entry: " + path);
+        if (header.pattern) {
+            if (!(entry_line >> row >> col) || (entry_line >> extra)) {
+                throw std::runtime_error("Malformed Matrix Market pattern entry: " + path);
+            }
+        } else {
+            if (!(entry_line >> row >> col >> value) || (entry_line >> extra)) {
+                throw std::runtime_error("Malformed Matrix Market entry: " + path);
+            }
         }
         if (row < 1 || row > nrows || col < 1 || col > ncols) {
             throw std::runtime_error("Matrix Market entry index out of bounds: " + path);
@@ -157,9 +181,17 @@ CSRMatrix read_matrix_market_to_csr(const std::string& path) {
             static_cast<std::int32_t>(col - 1),
             value,
         });
+        if (header.symmetric && row != col) {
+            entries.push_back(CooEntry{
+                col - 1,
+                static_cast<std::int32_t>(row - 1),
+                value,
+            });
+        }
+        ++file_entries;
     }
 
-    if (static_cast<std::int64_t>(entries.size()) != declared_nnz) {
+    if (file_entries != declared_nnz) {
         throw std::runtime_error("Matrix Market entry count does not match header: " + path);
     }
 

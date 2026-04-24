@@ -76,16 +76,22 @@ find "${DEST}" -name "*.mtx" | sort > "${tmp_list}"
 
 while IFS= read -r matrix; do
   header="$(head -n 1 "${matrix}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
-  if [[ "${header}" == "%%matrixmarket matrix coordinate real general" ]]; then
-    echo "${matrix}" >> "${LIST_OUT}"
-  else
-    echo "Skipping unsupported Matrix Market header in ${matrix}: ${header}" >&2
-  fi
+  case "${header}" in
+    "%%matrixmarket matrix coordinate real general" | \
+      "%%matrixmarket matrix coordinate integer general" | \
+      "%%matrixmarket matrix coordinate pattern general" | \
+      "%%matrixmarket matrix coordinate real symmetric")
+      echo "${matrix}" >> "${LIST_OUT}"
+      ;;
+    *)
+      echo "Skipping unsupported Matrix Market header in ${matrix}: ${header}" >&2
+      ;;
+  esac
 done < "${tmp_list}"
 rm -f "${tmp_list}"
 
 if [[ ! -s "${LIST_OUT}" ]]; then
-  echo "No supported coordinate real general matrices were found." >&2
+  echo "No parser-supported Matrix Market matrices were found." >&2
   exit 3
 fi
 
