@@ -2,8 +2,7 @@
 set -euo pipefail
 
 SPARSEBENCH_SCRATCH="${SPARSEBENCH_SCRATCH:-/gscratch/scrubbed/${USER}/sparsebench}"
-DEST="${1:-${SPARSEBENCH_SCRATCH}/data/suitesparse_small}"
-LIST_OUT="${2:-${SPARSEBENCH_SCRATCH}/data/small_matrices.txt}"
+SPARSEBENCH_MATRIX_SET="${SPARSEBENCH_MATRIX_SET:-small}"
 
 download_file() {
   local url="$1"
@@ -46,13 +45,44 @@ PY
   return 1
 }
 
-MATS=(
-  "HB/1138_bus"
-  "HB/494_bus"
-  "HB/662_bus"
-  "HB/ash958"
-  "HB/bcspwr06"
-)
+case "${SPARSEBENCH_MATRIX_SET}" in
+  small)
+    DEFAULT_DEST="${SPARSEBENCH_SCRATCH}/data/suitesparse_small"
+    DEFAULT_LIST_OUT="${SPARSEBENCH_SCRATCH}/data/small_matrices.txt"
+    MIN_SUPPORTED=1
+    MATS=(
+      "HB/1138_bus"
+      "HB/494_bus"
+      "HB/662_bus"
+      "HB/ash958"
+      "HB/bcspwr06"
+    )
+    ;;
+  medium)
+    DEFAULT_DEST="${SPARSEBENCH_SCRATCH}/data/suitesparse_medium"
+    DEFAULT_LIST_OUT="${SPARSEBENCH_SCRATCH}/data/medium_matrices.txt"
+    MIN_SUPPORTED=5
+    MATS=(
+      "Williams/mac_econ_fwd500"
+      "Williams/mc2depi"
+      "Williams/cop20k_A"
+      "Williams/cant"
+      "Williams/consph"
+      "Williams/pdb1HYS"
+      "Pothen/pwt"
+      "Pothen/skirt"
+      "HB/bcsstk31"
+      "HB/bcsstk32"
+    )
+    ;;
+  *)
+    echo "Unknown SPARSEBENCH_MATRIX_SET=${SPARSEBENCH_MATRIX_SET}; expected small or medium." >&2
+    exit 2
+    ;;
+esac
+
+DEST="${1:-${DEFAULT_DEST}}"
+LIST_OUT="${2:-${DEFAULT_LIST_OUT}}"
 
 mkdir -p "${DEST}"
 mkdir -p "$(dirname "${LIST_OUT}")"
@@ -73,6 +103,7 @@ done
 tmp_list="$(mktemp)"
 find "${DEST}" -name "*.mtx" | sort > "${tmp_list}"
 : > "${LIST_OUT}"
+accepted_count=0
 
 while IFS= read -r matrix; do
   header="$(head -n 1 "${matrix}" | tr -d '\r' | tr '[:upper:]' '[:lower:]')"
@@ -82,6 +113,7 @@ while IFS= read -r matrix; do
       "%%matrixmarket matrix coordinate pattern general" | \
       "%%matrixmarket matrix coordinate real symmetric")
       echo "${matrix}" >> "${LIST_OUT}"
+      accepted_count=$((accepted_count + 1))
       ;;
     *)
       echo "Skipping unsupported Matrix Market header in ${matrix}: ${header}" >&2
@@ -90,9 +122,11 @@ while IFS= read -r matrix; do
 done < "${tmp_list}"
 rm -f "${tmp_list}"
 
-if [[ ! -s "${LIST_OUT}" ]]; then
-  echo "No parser-supported Matrix Market matrices were found." >&2
+if (( accepted_count < MIN_SUPPORTED )); then
+  echo "Only ${accepted_count} parser-supported Matrix Market matrices were found for ${SPARSEBENCH_MATRIX_SET}; need at least ${MIN_SUPPORTED}." >&2
   exit 3
 fi
 
+echo "Matrix set: ${SPARSEBENCH_MATRIX_SET}"
 echo "Matrix list written to ${LIST_OUT}"
+echo "Parser-supported matrix count: ${accepted_count}"

@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` are synchronized at `5dc9ef099d752f581a947a6bb9f6c1153e90c952`. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next benchmark step is the documented 96-core medium `cpu-g2-mem2x` run before any 192-thread/full scaling attempt.
+**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` were synchronized at `7848e3c433db34d9d81428decba93ec87f753c76` before the medium-manifest change. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next benchmark step is the documented 96-core medium `cpu-g2-mem2x` run against `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` before any 192-thread/full scaling attempt.
 
 ---
 
@@ -156,6 +156,7 @@ mkdir -p "${RUNROOT}/data" "${RUNROOT}/results" "${RUNROOT}/logs" "${RUNROOT}/pa
 
 ```text
 ${RUNROOT}/data/small_matrices.txt
+${RUNROOT}/data/medium_matrices.txt
 ${RUNROOT}/results/pre_sbatch_*.csv
 ${RUNROOT}/results/smoke_<jobid>/*.csv
 ${RUNROOT}/results/mem2x_<jobid>/*.csv
@@ -332,8 +333,10 @@ Local implementation status:
 - `scripts/download_suitesparse.sh` now uses `download_file URL OUT`.
 - Downloader fallback order is `wget`, then `env -u LD_LIBRARY_PATH curl`, then `python3 urllib`.
 - Failed downloader attempts remove the partial output before trying the next downloader.
-- Manifest output remains `${SPARSEBENCH_SCRATCH}/data/small_matrices.txt`, defaulting to `/gscratch/scrubbed/$USER/sparsebench/data/small_matrices.txt`.
-- Manifest filtering still accepts only `%%MatrixMarket matrix coordinate real general`, with carriage returns stripped before header comparison.
+- `SPARSEBENCH_MATRIX_SET=small` remains the default and writes `${SPARSEBENCH_SCRATCH}/data/small_matrices.txt`, defaulting to `/gscratch/scrubbed/$USER/sparsebench/data/small_matrices.txt`.
+- `SPARSEBENCH_MATRIX_SET=medium` writes `${SPARSEBENCH_SCRATCH}/data/medium_matrices.txt`, defaulting to `/gscratch/scrubbed/$USER/sparsebench/data/medium_matrices.txt`.
+- Manifest filtering accepts the parser v0.1.1 header set: `coordinate real general`, `coordinate integer general`, `coordinate pattern general`, and `coordinate real symmetric`, with carriage returns stripped before header comparison.
+- Medium mode fails if fewer than 5 parser-supported matrices remain after filtering.
 
 Validation to record after execution:
 
@@ -399,6 +402,48 @@ while IFS= read -r m; do
   head -n 1 "$m"
 done < "$manifest"
 ```
+
+### 6.7 Medium matrix-set workflow
+
+The 96-core `cpu-g2-mem2x` medium run must use a separately generated medium manifest instead of reusing the 4-entry small manifest from the 32-core pilot. Generate it with:
+
+```bash
+cd /gscratch/stf/$USER/projects/SparseBench
+
+env -u LD_LIBRARY_PATH -u LIBRARY_PATH -u CPATH \
+  -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH -u PKG_CONFIG_PATH \
+  SPARSEBENCH_SCRATCH=/gscratch/scrubbed/$USER/sparsebench \
+  SPARSEBENCH_MATRIX_SET=medium \
+  bash scripts/download_suitesparse.sh
+```
+
+The fixed candidate list is:
+
+```text
+Williams/mac_econ_fwd500
+Williams/mc2depi
+Williams/cop20k_A
+Williams/cant
+Williams/consph
+Williams/pdb1HYS
+Pothen/pwt
+Pothen/skirt
+HB/bcsstk31
+HB/bcsstk32
+```
+
+Medium manifest path:
+
+```text
+/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt
+```
+
+Medium manifest acceptance:
+
+- `medium_matrices.txt` exists and has 5-10 entries.
+- Every entry points to an existing `.mtx` file.
+- Every header is in the parser-supported header set.
+- No `data/tiny/diag5.mtx` path appears.
 
 ---
 
@@ -836,7 +881,39 @@ THREADS=(1 2 4 8 16 32 64 96)
 Matrix set:
 
 ```text
-5–10 small/medium SuiteSparse matrices
+5–10 medium SuiteSparse matrices from /gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt
+```
+
+Do not reuse the 4-entry small manifest from the 32-core pilot for 96-core performance conclusions. The small manifest is useful evidence that the Slurm/build/parser/result path works, but its largest matrix is still too small for the next scaling gate.
+
+### 11.2.1 Submission command
+
+Use the checked-in 96-core defaults in `slurm/spmv_mem2x_scaling.slurm` and point `MATRIX_LIST` at the medium manifest:
+
+```bash
+cd /gscratch/stf/$USER/projects/SparseBench
+
+MATRIX_LIST=/gscratch/scrubbed/$USER/sparsebench/data/medium_matrices.txt
+
+bash -n slurm/spmv_mem2x_scaling.slurm
+sbatch --test-only \
+  --export=ALL,MATRIX_LIST="$MATRIX_LIST" \
+  slurm/spmv_mem2x_scaling.slurm
+
+jid=$(sbatch \
+  --export=ALL,MATRIX_LIST=/gscratch/scrubbed/$USER/sparsebench/data/medium_matrices.txt \
+  slurm/spmv_mem2x_scaling.slurm | awk '{print $4}')
+
+echo "$jid"
+squeue -j "$jid"
+```
+
+Expected coverage:
+
+```text
+threads: 1,2,4,8,16,32,64,96
+CSV count: matrix_count * 8
+result directory: /gscratch/scrubbed/$USER/sparsebench/results/mem2x_${jid}
 ```
 
 ### 11.3 Measurements
@@ -869,6 +946,11 @@ efficiency = speedup / threads
 - No timing rows are dominated by `0 ms` or invalid measurements.
 - CSV format is compatible with plotting scripts.
 - At least one matrix shows nontrivial thread scaling.
+- Slurm completes with `COMPLETED 0:0`.
+- CTest reports `3/3 tests passed`.
+- `.err` is empty or contains no runtime-linker failures.
+- CSV coverage is exactly `matrix_count * 8` files with thread counts `1,2,4,8,16,32,64,96` for every matrix.
+- Every CSV row has `repeat=30`, positive `median_ms`, positive `min_ms`, positive `nnz_per_sec`, and finite non-NaN checksum.
 
 ---
 
