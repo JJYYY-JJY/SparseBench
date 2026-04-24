@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Parser v0.1.1 has been implemented locally and the manifest now contains four real SuiteSparse matrices: three `real symmetric` inputs and one `pattern general` input. The next gate is compute-node build/CTest validation through the real `cpu-g2` smoke prechecks and job.
+**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Parser v0.1.1 has been implemented locally and the manifest now contains four real SuiteSparse matrices: three `real symmetric` inputs and one `pattern general` input. The `cpu-g2` smoke script now rejects missing first-matrix paths, `diag5.mtx` fallback manifests, and unsupported first-matrix headers before building. The next gate is compute-node build/CTest validation through the real `cpu-g2` smoke prechecks and job.
 
 ---
 
@@ -588,6 +588,12 @@ jid=$(sbatch slurm/spmv_smoke_cpu_g2.slurm | awk '{print $4}')
 echo "$jid"
 squeue -j "$jid"
 ```
+
+Smoke-script validation record:
+
+- `slurm/spmv_smoke_cpu_g2.slurm` validates that the first manifest entry exists before building.
+- The smoke script refuses the `data/tiny/diag5.mtx` fallback for real SuiteSparse smoke.
+- The smoke script validates the first matrix header against the parser-supported header set before running benchmarks.
 
 After completion:
 
