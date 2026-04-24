@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** The local implementation and Hyak `cpu-g2` smoke path are operational. The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. A repo hygiene update now ignores local `.codex` files/directories so session noise stays out of subsequent commits. The SuiteSparse downloader now falls back through `wget`, clean `curl`, and Python `urllib`. Parser v0.1.1 has been implemented locally and the manifest now contains four real SuiteSparse matrices: three `real symmetric` inputs and one `pattern general` input. The `cpu-g2` smoke script now rejects missing first-matrix paths, `diag5.mtx` fallback manifests, and unsupported first-matrix headers before building. The next gate is compute-node build/CTest validation through the real `cpu-g2` smoke prechecks and job.
+**Current status as of 2026-04-24.** The execution plan was committed locally as `d0ec419`, but `git push origin main` is currently blocked in this shell by missing non-interactive GitHub credentials. SuiteSparse ingestion, parser v0.1.1, and real `cpu-g2` smoke have passed locally on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`, using `/gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx` with header `%%MatrixMarket matrix coordinate real symmetric`. CTest passed `3/3`, `.err` was empty, `spmv_t1/t2/t4/t8.csv` were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next gate is `cpu-g2-mem2x` 32-core pilot precheck/submission after GitHub credential sync is resolved or explicitly deferred.
 
 ---
 
@@ -619,6 +619,32 @@ find /gscratch/scrubbed/$USER/sparsebench/results/smoke_${jid} \
 - CSV checksum is finite and non-NaN.
 - CSV includes matrix dimensions and `nnz` for a real matrix.
 
+Execution record:
+
+```text
+job id: 34802647
+commit: 820cba9fb10dc4f579b872a3cf93b5d7529982ea
+prechecks:
+  bash -n slurm/spmv_smoke_cpu_g2.slurm: passed
+  sbatch --test-only slurm/spmv_smoke_cpu_g2.slurm: accepted as test job 34802646
+first matrix: /gscratch/scrubbed/junyej/sparsebench/data/suitesparse_small/1138_bus/1138_bus.mtx
+first matrix header: %%MatrixMarket matrix coordinate real symmetric
+logs:
+  /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-smoke-34802647.out
+  /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-smoke-34802647.err
+result directory: /gscratch/scrubbed/junyej/sparsebench/results/smoke_34802647/
+CSV outputs:
+  spmv_t1.csv
+  spmv_t2.csv
+  spmv_t4.csv
+  spmv_t8.csv
+CSV fact: 1138_bus, nrows=1138, ncols=1138, nnz=4054, repeat=20, checksum=1460.0402679
+CTest: 3/3 tests passed
+.err status: empty
+runtime-linker errors: none observed
+Phase 4 acceptance: passed
+```
+
 ---
 
 ## 9. Phase 5 — Package and download smoke evidence
@@ -656,6 +682,19 @@ cd /gscratch/scrubbed/$USER/sparsebench
 
 tar -czf sparsebench_smoke_${RUNID}.tar.gz package_${RUNID}
 sha256sum sparsebench_smoke_${RUNID}.tar.gz > sparsebench_smoke_${RUNID}.sha256
+```
+
+Package record:
+
+```text
+RUNID: 34802647
+package directory: /gscratch/scrubbed/junyej/sparsebench/package_34802647
+archive: /gscratch/scrubbed/junyej/sparsebench/sparsebench_smoke_34802647.tar.gz
+archive size: 4.2K
+sha256: 78e348f785bf4982ede4d591f4d1f55be9dd34d7be09db0fbbeb68c65d4633bf
+checksum file: /gscratch/scrubbed/junyej/sparsebench/sparsebench_smoke_34802647.sha256
+packaged commit: 820cba9fb10dc4f579b872a3cf93b5d7529982ea
+packaged contents: logs, results, slurm, scripts, git_commit.txt, environment.txt
 ```
 
 ### 9.3 Download on Windows
