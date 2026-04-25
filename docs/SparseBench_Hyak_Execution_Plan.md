@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` were synchronized at `7848e3c433db34d9d81428decba93ec87f753c76` before the medium-manifest change. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The next benchmark step is the documented 96-core medium `cpu-g2-mem2x` run against `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` before any 192-thread/full scaling attempt.
+**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` are synchronized at `f06137fc6166194286b9c1fd491bf17a8f5a9c4c` after the medium-manifest workflow update. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The medium manifest at `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` has been generated and validated with 6 parser-supported matrices. The 96-core medium `cpu-g2-mem2x` job `34825519` has been submitted, but it is still `PENDING` with reason `QOSGrpCpuLimit`, so there is not yet medium-run CSV/log/package evidence. Do not start 192-thread/full scaling before this 96-core medium run completes and is reviewed.
 
 ---
 
@@ -914,6 +914,31 @@ Expected coverage:
 threads: 1,2,4,8,16,32,64,96
 CSV count: matrix_count * 8
 result directory: /gscratch/scrubbed/$USER/sparsebench/results/mem2x_${jid}
+```
+
+Medium manifest and submission record:
+
+```text
+medium-manifest workflow commit: f06137fc6166194286b9c1fd491bf17a8f5a9c4c
+manifest path: /gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt
+manifest count: 6
+manifest validation: passed path/header/count/diag5 checks
+accepted matrices: cant, consph, cop20k_A, mac_econ_fwd500, mc2depi, pdb1HYS
+bash -n scripts/download_suitesparse.sh: passed
+bash -n slurm/spmv_mem2x_scaling.slurm: passed
+git diff --check: passed
+sbatch --test-only --export=ALL,MATRIX_LIST=/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt slurm/spmv_mem2x_scaling.slurm: accepted as test job 34825338
+test-only placement: node n3445, partition cpu-g2-mem2x, 96 processors
+real 96-core submission: submitted as job 34825519
+requested resources: 96 CPUs, 512G, 04:00:00
+Slurm state at latest check: PENDING
+Slurm reason at latest check: QOSGrpCpuLimit
+submit time: 2026-04-24T16:23:51
+start time: Unknown
+stdout path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.out
+stderr path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.err
+expected result directory once started: /gscratch/scrubbed/junyej/sparsebench/results/mem2x_34825519/
+current blocker: scheduler QOS CPU limit; no medium-run logs, CSVs, package, or acceptance evidence yet
 ```
 
 ### 11.3 Measurements
