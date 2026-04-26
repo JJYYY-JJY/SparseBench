@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-24.** Hyak `main`, local `origin/main`, and GitHub `main` are synchronized at `f06137fc6166194286b9c1fd491bf17a8f5a9c4c` after the medium-manifest workflow update. SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The medium manifest at `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` has been generated and validated with 6 parser-supported matrices. The 96-core medium `cpu-g2-mem2x` job `34825519` has been submitted, but it is still `PENDING` with reason `QOSGrpCpuLimit`, so there is not yet medium-run CSV/log/package evidence. Do not start 192-thread/full scaling before this 96-core medium run completes and is reviewed.
+**Current status as of 2026-04-25.** SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The medium manifest at `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` has been generated and validated with 6 parser-supported matrices. The 96-core medium `cpu-g2-mem2x` job `34825519` completed at commit `2fc974c0a4a0eea087f8e86dd5f54fe626992729` with `COMPLETED 0:0`, CTest `3/3`, empty stderr, and 48 CSVs covering 6 matrices across thread counts `1,2,4,8,16,32,64,96`; its package, checksum, and analysis summary are under `/gscratch/scrubbed/junyej/sparsebench/`. The 192-core Phase 8 job `34851174` has been submitted from a scrubbed-side Slurm script and is currently `PENDING` with reason `QOSGrpCpuLimit`; there are no 192-core result CSVs yet.
 
 ---
 
@@ -24,9 +24,9 @@ This document covers:
 
 ### 1.2 Non-goals for the immediate next pass
 
-Do **not** do these before reviewing the 32-core `cpu-g2-mem2x` pilot evidence and deciding the 96-core medium-run matrix set:
+Do **not** do these before the 192-core Phase 8 job completes and its logs/CSVs are reviewed:
 
-- Do not submit the 192-thread/full `cpu-g2-mem2x` run before a 96-core medium run.
+- Do not claim final 192-thread/full `cpu-g2-mem2x` results while job `34851174` is pending.
 - Do not add CG, GMRES, Lanczos, or other algorithms.
 - Do not run performance conclusions from `diag5.mtx` fallback data.
 - Do not treat `hyakalloc-all` global idle resources as guaranteed availability for this account.
@@ -916,7 +916,7 @@ CSV count: matrix_count * 8
 result directory: /gscratch/scrubbed/$USER/sparsebench/results/mem2x_${jid}
 ```
 
-Medium manifest and submission record:
+Medium manifest, execution, analysis, and package record:
 
 ```text
 medium-manifest workflow commit: f06137fc6166194286b9c1fd491bf17a8f5a9c4c
@@ -931,14 +931,36 @@ sbatch --test-only --export=ALL,MATRIX_LIST=/gscratch/scrubbed/junyej/sparsebenc
 test-only placement: node n3445, partition cpu-g2-mem2x, 96 processors
 real 96-core submission: submitted as job 34825519
 requested resources: 96 CPUs, 512G, 04:00:00
-Slurm state at latest check: PENDING
-Slurm reason at latest check: QOSGrpCpuLimit
 submit time: 2026-04-24T16:23:51
-start time: Unknown
-stdout path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.out
-stderr path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.err
-expected result directory once started: /gscratch/scrubbed/junyej/sparsebench/results/mem2x_34825519/
-current blocker: scheduler QOS CPU limit; no medium-run logs, CSVs, package, or acceptance evidence yet
+start time: 2026-04-25T03:30:12
+end time: 2026-04-25T03:31:14
+elapsed: 00:01:02
+node: n3443
+Slurm state: COMPLETED
+Slurm exit code: 0:0
+commit printed by job: 2fc974c0a4a0eea087f8e86dd5f54fe626992729
+stdout: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.out
+stderr: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34825519.err
+CTest: 3/3 tests passed
+.err status: empty
+result directory: /gscratch/scrubbed/junyej/sparsebench/results/mem2x_34825519/
+CSV count: 48
+matrices: cant, consph, cop20k_A, mac_econ_fwd500, mc2depi, pdb1HYS
+thread coverage per matrix: 1,2,4,8,16,32,64,96
+repeat: 30
+CSV validation: every file has the expected header, one data row, repeat=30, positive median_ms/min_ms/nnz_per_sec, and finite checksum
+analysis CSV: /gscratch/scrubbed/junyej/sparsebench/analysis/mem2x_34825519_summary.csv
+analysis Markdown: /gscratch/scrubbed/junyej/sparsebench/analysis/mem2x_34825519_summary.md
+best observed speedup range: 1.693x to 2.123x
+speedup at 96 threads: 1.514x to 2.121x
+scaling interpretation: valid benchmark signal, but CSR SpMV is memory-bandwidth limited; matrices that peak before 96 threads are signal, not failure
+package directory: /gscratch/scrubbed/junyej/sparsebench/package_mem2x_34825519
+archive: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34825519.tar.gz
+archive size: 7.5K
+sha256: de90447e85738344e2479ac9b8c7147b1090ab8562331b48465e7911736f9c59
+checksum file: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34825519.sha256
+packaged contents: logs, results, slurm, scripts, git_commit.txt, environment.txt
+Phase 7 acceptance: passed
 ```
 
 ### 11.3 Measurements
@@ -976,6 +998,13 @@ efficiency = speedup / threads
 - `.err` is empty or contains no runtime-linker failures.
 - CSV coverage is exactly `matrix_count * 8` files with thread counts `1,2,4,8,16,32,64,96` for every matrix.
 - Every CSV row has `repeat=30`, positive `median_ms`, positive `min_ms`, positive `nnz_per_sec`, and finite non-NaN checksum.
+
+Phase 7 acceptance record:
+
+```text
+job 34825519 passed all Phase 7 acceptance criteria.
+The resulting speedups are modest, as expected for memory-bandwidth-limited CSR SpMV, but the run is mechanically valid and sufficient to advance to the 192-core scheduling/scaling probe.
+```
 
 ---
 
@@ -1031,6 +1060,33 @@ large matrices:   repeat 5–10
 - No fallback matrix is included in the official benchmark manifest.
 - CSVs are packaged and downloaded after completion.
 
+### 12.7 Submission record
+
+The first Phase 8 run reuses the validated 6-entry medium manifest for a controlled 96-to-192 comparison. Generated script and job artifacts stay under `/gscratch/scrubbed/junyej/sparsebench` because `/mmfs1/gscratch/stf` is 99% full.
+
+```text
+scrubbed status note: /gscratch/scrubbed/junyej/sparsebench/phase8_status.md
+scrubbed Slurm script: /gscratch/scrubbed/junyej/sparsebench/slurm/spmv_mem2x_192_20260425.slurm
+script source: copied from slurm/spmv_mem2x_scaling.slurm and changed only Phase 8 parameters
+requested resources: 192 CPUs, 1500G, 08:00:00
+manifest: /gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt
+manifest validation: passed path/header/count/diag5 checks
+thread list: 1,2,4,8,16,32,64,96,128,192
+expected CSV count if completed: 6 matrices x 10 thread counts = 60
+bash -n /gscratch/scrubbed/junyej/sparsebench/slurm/spmv_mem2x_192_20260425.slurm: passed
+sbatch --test-only /gscratch/scrubbed/junyej/sparsebench/slurm/spmv_mem2x_192_20260425.slurm: accepted as test job 34851157
+test-only placement: node n3443, partition cpu-g2-mem2x, 192 processors
+real 192-core submission: submitted as job 34851174
+Slurm state at latest check: PENDING
+Slurm reason at latest check: QOSGrpCpuLimit
+submit time: 2026-04-25T18:41:58
+start time: Unknown
+stdout path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34851174.out
+stderr path once started: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-mem2x-34851174.err
+expected result directory once started: /gscratch/scrubbed/junyej/sparsebench/results/mem2x_34851174/
+current blocker: scheduler QOS CPU limit; no 192-core logs, CSVs, package, or benchmark conclusions yet
+```
+
 ---
 
 ## 13. Phase 9 — Package, download, and plot mem2x results
@@ -1078,6 +1134,23 @@ sha256: 16bf0aa5594f65172fc2b51909633db387f4bb1de919aed5ae6ce757c3be4e33
 checksum file: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34803037.sha256
 packaged commit: 5dc9ef099d752f581a947a6bb9f6c1153e90c952
 packaged contents: logs, results, slurm, scripts, git_commit.txt, environment.txt
+```
+
+Medium package record:
+
+```text
+RUNID: 34825519
+package directory: /gscratch/scrubbed/junyej/sparsebench/package_mem2x_34825519
+archive: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34825519.tar.gz
+archive size: 7.5K
+sha256: de90447e85738344e2479ac9b8c7147b1090ab8562331b48465e7911736f9c59
+checksum file: /gscratch/scrubbed/junyej/sparsebench/sparsebench_mem2x_34825519.sha256
+packaged commit: 2fc974c0a4a0eea087f8e86dd5f54fe626992729
+packaged contents: logs, results, slurm, scripts, git_commit.txt, environment.txt
+package verification: sha256sum -c passed; archive contains 48 result CSVs plus logs/scripts/slurm/environment metadata
+analysis files:
+  /gscratch/scrubbed/junyej/sparsebench/analysis/mem2x_34825519_summary.csv
+  /gscratch/scrubbed/junyej/sparsebench/analysis/mem2x_34825519_summary.md
 ```
 
 ### 13.2 Download on Windows
@@ -1179,13 +1252,11 @@ v0.6     NUMA and memory-placement experiments
 Current priority:
 
 ```text
-1. Review the 32-core mem2x pilot CSVs and package.
-2. Choose the 96-core medium-run matrix set.
-3. Run mem2x 96-core medium scaling.
-4. Review speedup/efficiency and runtime behavior.
-5. Run 192-thread/full scaling only after the medium run is stable.
-6. Plot and document results.
-7. Add CG/Lanczos only after SpMV benchmark is stable.
+1. Track 192-core job 34851174 until it leaves QOSGrpCpuLimit and either completes or fails with actionable logs.
+2. If 34851174 completes, verify COMPLETED 0:0, empty stderr, CTest 3/3, and 60 CSVs for 6 matrices x 10 threads.
+3. Package 34851174 with the same Phase 9 layout and generate 192-core speedup/efficiency analysis.
+4. Plot and document 96-core vs 192-core behavior, including memory-bandwidth limits and matrices that peak early.
+5. Add CG/Lanczos only after SpMV benchmark reporting is stable.
 ```
 
 ---
@@ -1200,8 +1271,8 @@ Current priority:
 | 4. Real cpu-g2 smoke | supported manifest | `spmv_smoke_cpu_g2.slurm` | real matrix CSVs | threads `1,2,4,8` CSVs |
 | 5. Smoke package | smoke job ID | `tar`, `sha256sum` | downloadable archive | archive downloaded locally |
 | 6. mem2x pilot | real manifest | `spmv_mem2x_scaling.slurm` with 32 cores | pilot CSVs | threads `1..32` CSVs |
-| 7. mem2x medium | 5–10 matrices | 96-core run | preliminary scaling | plausible speedup/efficiency |
-| 8. mem2x full | final matrix set | 192-core run | final CSVs | full thread coverage |
+| 7. mem2x medium | 6 medium matrices | job `34825519` | 48 CSVs + package + analysis | `COMPLETED 0:0`, CTest `3/3`, empty stderr, exact thread coverage |
+| 8. mem2x full | same validated medium manifest for controlled probe | job `34851174` | pending 192-core run | currently blocked by `QOSGrpCpuLimit`; require 60 CSVs before conclusions |
 | 9. Reporting | final CSVs | plotting scripts | figures + README | benchmark section committed |
 
 ---
