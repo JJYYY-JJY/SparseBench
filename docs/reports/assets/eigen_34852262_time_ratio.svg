@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="434" viewBox="0 0 920 434" role="img">
+<style><![CDATA[
+text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+.title { font-size: 22px; font-weight: 700; }
+.subtitle { font-size: 13px; fill: #4b5563; }
+.axis { font-size: 12px; fill: #374151; }
+.label { font-size: 13px; fill: #1f2937; }
+.small { font-size: 11px; fill: #4b5563; }
+.value { font-size: 12px; font-weight: 700; }
+]]></style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title>Eigen/SparseBench median time ratio by matrix and thread count</title>
+<text class="title" x="28" y="34">Eigen/SparseBench median time ratio</text>
+<text class="subtitle" x="28" y="58">Job 34852262 on cpu-g2; lower values mean Eigen was faster in that paired run.</text>
+<text class="axis" x="235.00" y="88" text-anchor="middle">1t</text>
+<text class="axis" x="337.00" y="88" text-anchor="middle">2t</text>
+<text class="axis" x="439.00" y="88" text-anchor="middle">4t</text>
+<text class="axis" x="541.00" y="88" text-anchor="middle">8t</text>
+<text class="axis" x="643.00" y="88" text-anchor="middle">16t</text>
+<text class="axis" x="745.00" y="88" text-anchor="middle">32t</text>
+<text class="label" x="170" y="130" text-anchor="end">cant</text>
+<rect x="184" y="104" width="98" height="38" rx="3" fill="#eb9c0f"/>
+<text class="value" x="233.00" y="128" text-anchor="middle" fill="#111827">0.58</text>
+<rect x="286" y="104" width="98" height="38" rx="3" fill="#ae922a"/>
+<text class="value" x="335.00" y="128" text-anchor="middle" fill="#111827">0.45</text>
+<rect x="388" y="104" width="98" height="38" rx="3" fill="#658549"/>
+<text class="value" x="437.00" y="128" text-anchor="middle" fill="#ffffff">0.29</text>
+<rect x="490" y="104" width="98" height="38" rx="3" fill="#307c60"/>
+<text class="value" x="539.00" y="128" text-anchor="middle" fill="#ffffff">0.17</text>
+<rect x="592" y="104" width="98" height="38" rx="3" fill="#16776b"/>
+<text class="value" x="641.00" y="128" text-anchor="middle" fill="#ffffff">0.12</text>
+<rect x="694" y="104" width="98" height="38" rx="3" fill="#1d7968"/>
+<text class="value" x="743.00" y="128" text-anchor="middle" fill="#ffffff">0.13</text>
+<text class="label" x="170" y="172" text-anchor="end">consph</text>
+<rect x="184" y="146" width="98" height="38" rx="3" fill="#ec9c0f"/>
+<text class="value" x="233.00" y="170" text-anchor="middle" fill="#111827">0.58</text>
+<rect x="286" y="146" width="98" height="38" rx="3" fill="#af9229"/>
+<text class="value" x="335.00" y="170" text-anchor="middle" fill="#111827">0.45</text>
+<rect x="388" y="146" width="98" height="38" rx="3" fill="#678548"/>
+<text class="value" x="437.00" y="170" text-anchor="middle" fill="#ffffff">0.3</text>
+<rect x="490" y="146" width="98" height="38" rx="3" fill="#327c5f"/>
+<text class="value" x="539.00" y="170" text-anchor="middle" fill="#ffffff">0.18</text>
+<rect x="592" y="146" width="98" height="38" rx="3" fill="#2a7b62"/>
+<text class="value" x="641.00" y="170" text-anchor="middle" fill="#ffffff">0.16</text>
+<rect x="694" y="146" width="98" height="38" rx="3" fill="#2d7b61"/>
+<text class="value" x="743.00" y="170" text-anchor="middle" fill="#ffffff">0.17</text>
+<text class="label" x="170" y="214" text-anchor="end">cop20k_A</text>
+<rect x="184" y="188" width="98" height="38" rx="3" fill="#f39e0c"/>
+<text class="value" x="233.00" y="212" text-anchor="middle" fill="#111827">0.6</text>
+<rect x="286" y="188" width="98" height="38" rx="3" fill="#c49520"/>
+<text class="value" x="335.00" y="212" text-anchor="middle" fill="#111827">0.5</text>
+<rect x="388" y="188" width="98" height="38" rx="3" fill="#748843"/>
+<text class="value" x="437.00" y="212" text-anchor="middle" fill="#111827">0.32</text>
+<rect x="490" y="188" width="98" height="38" rx="3" fill="#377d5d"/>
+<text class="value" x="539.00" y="212" text-anchor="middle" fill="#ffffff">0.19</text>
+<rect x="592" y="188" width="98" height="38" rx="3" fill="#1e7967"/>
+<text class="value" x="641.00" y="212" text-anchor="middle" fill="#ffffff">0.14</text>
+<rect x="694" y="188" width="98" height="38" rx="3" fill="#0f766e"/>
+<text class="value" x="743.00" y="212" text-anchor="middle" fill="#ffffff">0.1</text>
+<text class="label" x="170" y="256" text-anchor="end">mac_econ_fwd500</text>
+<rect x="184" y="230" width="98" height="38" rx="3" fill="#c7961f"/>
+<text class="value" x="233.00" y="254" text-anchor="middle" fill="#111827">0.5</text>
+<rect x="286" y="230" width="98" height="38" rx="3" fill="#b09229"/>
+<text class="value" x="335.00" y="254" text-anchor="middle" fill="#111827">0.45</text>
+<rect x="388" y="230" width="98" height="38" rx="3" fill="#758842"/>
+<text class="value" x="437.00" y="254" text-anchor="middle" fill="#111827">0.33</text>
+<rect x="490" y="230" width="98" height="38" rx="3" fill="#528251"/>
+<text class="value" x="539.00" y="254" text-anchor="middle" fill="#ffffff">0.25</text>
+<rect x="592" y="230" width="98" height="38" rx="3" fill="#417f58"/>
+<text class="value" x="641.00" y="254" text-anchor="middle" fill="#ffffff">0.21</text>
+<rect x="694" y="230" width="98" height="38" rx="3" fill="#457f57"/>
+<text class="value" x="743.00" y="254" text-anchor="middle" fill="#ffffff">0.22</text>
+<text class="label" x="170" y="298" text-anchor="end">mc2depi</text>
+<rect x="184" y="272" width="98" height="38" rx="3" fill="#ec9c0f"/>
+<text class="value" x="233.00" y="296" text-anchor="middle" fill="#111827">0.58</text>
+<rect x="286" y="272" width="98" height="38" rx="3" fill="#c49520"/>
+<text class="value" x="335.00" y="296" text-anchor="middle" fill="#111827">0.5</text>
+<rect x="388" y="272" width="98" height="38" rx="3" fill="#868b3b"/>
+<text class="value" x="437.00" y="296" text-anchor="middle" fill="#111827">0.36</text>
+<rect x="490" y="272" width="98" height="38" rx="3" fill="#5c834d"/>
+<text class="value" x="539.00" y="296" text-anchor="middle" fill="#ffffff">0.27</text>
+<rect x="592" y="272" width="98" height="38" rx="3" fill="#508152"/>
+<text class="value" x="641.00" y="296" text-anchor="middle" fill="#ffffff">0.24</text>
+<rect x="694" y="272" width="98" height="38" rx="3" fill="#af9229"/>
+<text class="value" x="743.00" y="296" text-anchor="middle" fill="#111827">0.45</text>
+<text class="label" x="170" y="340" text-anchor="end">pdb1HYS</text>
+<rect x="184" y="314" width="98" height="38" rx="3" fill="#f59e0b"/>
+<text class="value" x="233.00" y="338" text-anchor="middle" fill="#111827">0.6</text>
+<rect x="286" y="314" width="98" height="38" rx="3" fill="#bf9522"/>
+<text class="value" x="335.00" y="338" text-anchor="middle" fill="#111827">0.49</text>
+<rect x="388" y="314" width="98" height="38" rx="3" fill="#758842"/>
+<text class="value" x="437.00" y="338" text-anchor="middle" fill="#111827">0.33</text>
+<rect x="490" y="314" width="98" height="38" rx="3" fill="#387d5c"/>
+<text class="value" x="539.00" y="338" text-anchor="middle" fill="#ffffff">0.19</text>
+<rect x="592" y="314" width="98" height="38" rx="3" fill="#207967"/>
+<text class="value" x="641.00" y="338" text-anchor="middle" fill="#ffffff">0.14</text>
+<rect x="694" y="314" width="98" height="38" rx="3" fill="#1f7967"/>
+<text class="value" x="743.00" y="338" text-anchor="middle" fill="#ffffff">0.14</text>
+<text class="small" x="184" y="404">ratio range: 0.104 to 0.604</text>
+</svg>

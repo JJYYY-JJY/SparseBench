@@ -1383,6 +1383,41 @@ Plan C gating note:
 The Eigen external-baseline run `34852262` is valid report material for a 32-core `cpu-g2` comparison, but it must be labeled separately from the pending 192-core `cpu-g2-mem2x` probe. Do not merge Plan C results into a final 192-core benchmark claim unless the text explicitly distinguishes partition, QOS, thread range, and backend.
 ```
 
+### 14.1 Reporting artifact record
+
+The first reporting pass promotes the completed Phase 7 and Plan C evidence into tracked prose and lightweight derived figures, without committing raw result CSVs:
+
+```text
+canonical report: docs/reports/sparsebench_spmv_baseline_report.md
+report assets:
+  docs/reports/assets/mem2x_34825519_speedup.svg
+  docs/reports/assets/mem2x_34825519_efficiency.svg
+  docs/reports/assets/eigen_34852262_time_ratio.svg
+  docs/reports/assets/eigen_34852262_best_backend.svg
+asset generator: scripts/generate_report_assets.py
+blog draft: docs/blog/sparsebench_hyak_spmv.md
+README section: Benchmarks
+```
+
+Evidence boundary for this reporting pass:
+
+```text
+included as completed evidence:
+  job 34825519: 96-core cpu-g2-mem2x SparseBench scaling, 48 CSVs
+  job 34852262: 32-core cpu-g2 SparseBench/Eigen paired baseline, 72 CSVs
+background only:
+  job 34851174: 192-core cpu-g2-mem2x probe, still pending with QOSGrpCpuLimit and no result artifacts
+```
+
+The generated SVGs are deterministic outputs from the existing summary files:
+
+```bash
+python3 scripts/generate_report_assets.py \
+  --mem2x-summary /gscratch/scrubbed/$USER/sparsebench/analysis/mem2x_34825519_summary.csv \
+  --eigen-summary /gscratch/scrubbed/$USER/sparsebench/analysis/eigen_baseline_34852262_summary.csv \
+  --out-dir docs/reports/assets
+```
+
 ---
 
 ## 15. Resume bullets

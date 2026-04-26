@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="532" viewBox="0 0 960 532" role="img">
+<style><![CDATA[
+text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+.title { font-size: 22px; font-weight: 700; }
+.subtitle { font-size: 13px; fill: #4b5563; }
+.axis { font-size: 12px; fill: #374151; }
+.label { font-size: 13px; fill: #1f2937; }
+.small { font-size: 11px; fill: #4b5563; }
+.value { font-size: 12px; font-weight: 700; }
+]]></style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title>SparseBench 96-core mem2x speedup</title>
+<text class="title" x="28" y="34">SparseBench 96-core mem2x speedup</text>
+<text class="subtitle" x="28" y="58">Job 34825519; speedup is relative to each matrix&#x27;s 1-thread median time.</text>
+<text class="axis" x="190" y="504">speedup over 1 thread</text>
+<rect x="190" y="78" width="14" height="14" fill="#2563eb"/>
+<text class="small" x="210" y="90">Best observed speedup</text>
+<rect x="368" y="78" width="14" height="14" fill="#d97706"/>
+<text class="small" x="388" y="90">Speedup at 96 threads</text>
+<line x1="190.00" y1="100" x2="190.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="190.00" y="494" text-anchor="middle">0</text>
+<line x1="538.00" y1="100" x2="538.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="538.00" y="494" text-anchor="middle">1.18</text>
+<line x1="886.00" y1="100" x2="886.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="886.00" y="494" text-anchor="middle">2.35</text>
+<line x1="190" y1="478" x2="886" y2="478" stroke="#9ca3af"/>
+<text class="label" x="176" y="130" text-anchor="end">cant</text>
+<text class="small" x="176" y="146" text-anchor="end">best t64</text>
+<rect x="190" y="119" width="600.63" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="798.63" y="131">2.028</text>
+<rect x="190" y="138" width="598.26" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="796.26" y="150">2.02</text>
+<text class="label" x="176" y="188" text-anchor="end">consph</text>
+<text class="small" x="176" y="204" text-anchor="end">best t64</text>
+<rect x="190" y="177" width="612.78" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="810.78" y="189">2.069</text>
+<rect x="190" y="196" width="612.48" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="810.48" y="208">2.068</text>
+<text class="label" x="176" y="246" text-anchor="end">cop20k_A</text>
+<text class="small" x="176" y="262" text-anchor="end">best t64</text>
+<rect x="190" y="235" width="607.45" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="805.45" y="247">2.051</text>
+<rect x="190" y="254" width="606.56" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="804.56" y="266">2.048</text>
+<text class="label" x="176" y="304" text-anchor="end">mac_econ_fwd500</text>
+<text class="small" x="176" y="320" text-anchor="end">best t16</text>
+<rect x="190" y="293" width="538.44" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="736.44" y="305">1.818</text>
+<rect x="190" y="312" width="476.83" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="674.83" y="324">1.61</text>
+<text class="label" x="176" y="362" text-anchor="end">mc2depi</text>
+<text class="small" x="176" y="378" text-anchor="end">best t8</text>
+<rect x="190" y="351" width="501.42" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="699.42" y="363">1.693</text>
+<rect x="190" y="370" width="448.40" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="646.40" y="382">1.514</text>
+<text class="label" x="176" y="420" text-anchor="end">pdb1HYS</text>
+<text class="small" x="176" y="436" text-anchor="end">best t64</text>
+<rect x="190" y="409" width="628.77" height="14" rx="2" fill="#2563eb"/>
+<text class="value" x="826.77" y="421">2.123</text>
+<rect x="190" y="428" width="628.18" height="14" rx="2" fill="#d97706"/>
+<text class="value" x="826.18" y="440">2.121</text>
+</svg>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="442" viewBox="0 0 960 442" role="img">
+<style><![CDATA[
+text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+.title { font-size: 22px; font-weight: 700; }
+.subtitle { font-size: 13px; fill: #4b5563; }
+.axis { font-size: 12px; fill: #374151; }
+.label { font-size: 13px; fill: #1f2937; }
+.small { font-size: 11px; fill: #4b5563; }
+.value { font-size: 12px; font-weight: 700; }
+]]></style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title>Best backend by matrix</title>
+<text class="title" x="28" y="34">Best backend by matrix</text>
+<text class="subtitle" x="28" y="58">Job 34852262; best backend by matrix: Eigen 6/6, SparseBench 0/6. Pairwise wins: Eigen 36, SparseBench 0.</text>
+<text class="axis" x="190" y="414">best median ms across tested thread counts</text>
+<line x1="190.00" y1="94" x2="190.00" y2="388" stroke="#e5e7eb"/>
+<text class="axis" x="190.00" y="404" text-anchor="middle">0</text>
+<line x1="527.00" y1="94" x2="527.00" y2="388" stroke="#e5e7eb"/>
+<text class="axis" x="527.00" y="404" text-anchor="middle">0.3</text>
+<line x1="864.00" y1="94" x2="864.00" y2="388" stroke="#e5e7eb"/>
+<text class="axis" x="864.00" y="404" text-anchor="middle">0.6</text>
+<line x1="190" y1="388" x2="864" y2="388" stroke="#9ca3af"/>
+<text class="label" x="176" y="122" text-anchor="end">cant</text>
+<rect x="190" y="106" width="242.94" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="440.94" y="120">Eigen t16: 0.216 ms</text>
+<text class="label" x="176" y="166" text-anchor="end">consph</text>
+<rect x="190" y="150" width="498.20" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="696.20" y="164">Eigen t32: 0.444 ms</text>
+<text class="label" x="176" y="210" text-anchor="end">cop20k_A</text>
+<rect x="190" y="194" width="148.72" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="346.72" y="208">Eigen t32: 0.132 ms</text>
+<text class="label" x="176" y="254" text-anchor="end">mac_econ_fwd500</text>
+<rect x="190" y="238" width="174.95" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="372.95" y="252">Eigen t16: 0.156 ms</text>
+<text class="label" x="176" y="298" text-anchor="end">mc2depi</text>
+<rect x="190" y="282" width="385.46" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="583.46" y="296">Eigen t16: 0.343 ms</text>
+<text class="label" x="176" y="342" text-anchor="end">pdb1HYS</text>
+<rect x="190" y="326" width="293.90" height="17" rx="3" fill="#16a34a"/>
+<text class="value" x="491.90" y="340">Eigen t32: 0.262 ms</text>
+</svg>

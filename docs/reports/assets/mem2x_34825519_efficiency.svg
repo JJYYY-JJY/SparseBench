@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="532" viewBox="0 0 960 532" role="img">
+<style><![CDATA[
+text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+.title { font-size: 22px; font-weight: 700; }
+.subtitle { font-size: 13px; fill: #4b5563; }
+.axis { font-size: 12px; fill: #374151; }
+.label { font-size: 13px; fill: #1f2937; }
+.small { font-size: 11px; fill: #4b5563; }
+.value { font-size: 12px; font-weight: 700; }
+]]></style>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title>SparseBench 96-thread parallel efficiency</title>
+<text class="title" x="28" y="34">SparseBench 96-thread parallel efficiency</text>
+<text class="subtitle" x="28" y="58">Job 34825519; efficiency = speedup / 96, shown as percent.</text>
+<text class="axis" x="190" y="504">parallel efficiency at 96 threads (%)</text>
+<rect x="190" y="78" width="14" height="14" fill="#7c3aed"/>
+<text class="small" x="210" y="90">Efficiency at 96 threads</text>
+<line x1="190.00" y1="100" x2="190.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="190.00" y="494" text-anchor="middle">0</text>
+<line x1="538.00" y1="100" x2="538.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="538.00" y="494" text-anchor="middle">1.25</text>
+<line x1="886.00" y1="100" x2="886.00" y2="478" stroke="#e5e7eb"/>
+<text class="axis" x="886.00" y="494" text-anchor="middle">2.5</text>
+<line x1="190" y1="478" x2="886" y2="478" stroke="#9ca3af"/>
+<text class="label" x="176" y="130" text-anchor="end">cant</text>
+<text class="small" x="176" y="146" text-anchor="end">96 threads</text>
+<rect x="190" y="119" width="586.03" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="784.03" y="131">2.105%</text>
+<text class="label" x="176" y="188" text-anchor="end">consph</text>
+<text class="small" x="176" y="204" text-anchor="end">96 threads</text>
+<rect x="190" y="177" width="599.67" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="797.67" y="189">2.154%</text>
+<text class="label" x="176" y="246" text-anchor="end">cop20k_A</text>
+<text class="small" x="176" y="262" text-anchor="end">96 threads</text>
+<rect x="190" y="235" width="593.83" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="791.83" y="247">2.133%</text>
+<text class="label" x="176" y="304" text-anchor="end">mac_econ_fwd500</text>
+<text class="small" x="176" y="320" text-anchor="end">96 threads</text>
+<rect x="190" y="293" width="466.88" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="664.88" y="305">1.677%</text>
+<text class="label" x="176" y="362" text-anchor="end">mc2depi</text>
+<text class="small" x="176" y="378" text-anchor="end">96 threads</text>
+<rect x="190" y="351" width="439.04" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="637.04" y="363">1.577%</text>
+<text class="label" x="176" y="420" text-anchor="end">pdb1HYS</text>
+<text class="small" x="176" y="436" text-anchor="end">96 threads</text>
+<rect x="190" y="409" width="614.99" height="14" rx="2" fill="#7c3aed"/>
+<text class="value" x="812.99" y="421">2.209%</text>
+</svg>

@@ -82,6 +82,46 @@ Before submitting, confirm the binary name, matrix manifest, module stack, time 
 - OpenMP CSR SpMV when the compiler toolchain exposes OpenMP.
 - CSV benchmark output with median runtime, minimum runtime, nnz/sec, and checksum.
 
+## Benchmarks
+
+The current benchmark report is [docs/reports/sparsebench_spmv_baseline_report.md](docs/reports/sparsebench_spmv_baseline_report.md). It records two completed Hyak evidence sets and keeps the pending 192-core probe separate from completed results.
+
+| Evidence | Scope | Completed output | Run-specific result |
+|---|---|---|---|
+| `34825519` | 96-core `cpu-g2-mem2x`, 6 SuiteSparse medium matrices, SparseBench CSR SpMV, threads `1,2,4,8,16,32,64,96` | `COMPLETED 0:0`, CTest `3/3`, empty stderr, 48 CSVs | Best observed speedups were `1.693x` to `2.123x`; all matrices peaked before 96 threads, consistent with memory-bandwidth-limited SpMV. |
+| `34852262` | 32-core `cpu-g2`, same 6 matrices, paired SparseBench vs Eigen, threads `1,2,4,8,16,32` | `COMPLETED 0:0`, CTest `5/5`, empty stderr, 72 paired CSVs | Eigen won `36/36` paired matrix/thread comparisons in this run. |
+| `34851174` | 192-core `cpu-g2-mem2x` probe, same medium manifest | `PENDING` with `QOSGrpCpuLimit` | No 192-core CSVs, logs, package, or benchmark conclusion yet. |
+
+Default build check, with Eigen disabled:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build --output-on-failure
+test ! -e build/sparsebench_spmv_eigen
+```
+
+Reproduce the Eigen baseline workflow on Hyak:
+
+```bash
+cd /gscratch/stf/$USER/projects/SparseBench
+
+bash -n slurm/spmv_eigen_baseline_cpu_g2.slurm
+sbatch --test-only slurm/spmv_eigen_baseline_cpu_g2.slurm
+sbatch slurm/spmv_eigen_baseline_cpu_g2.slurm
+```
+
+Regenerate the curated report figures from existing summaries:
+
+```bash
+python3 scripts/generate_report_assets.py \
+  --mem2x-summary /gscratch/scrubbed/$USER/sparsebench/analysis/mem2x_34825519_summary.csv \
+  --eigen-summary /gscratch/scrubbed/$USER/sparsebench/analysis/eigen_baseline_34852262_summary.csv \
+  --out-dir docs/reports/assets
+```
+
+Raw benchmark CSVs, Slurm logs, and scratch packages remain generated artifacts and should stay out of Git. The committed SVGs under `docs/reports/assets/` are lightweight derived report assets.
+
 ## Output Policy
 
 Generated results, logs, and plots are ignored by Git. Keep only lightweight metadata, scripts, and reproducibility notes in the repository unless a future release explicitly adds curated benchmark artifacts.
