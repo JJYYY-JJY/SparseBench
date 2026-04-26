@@ -1220,6 +1220,24 @@ analysis validation: scripts/analyze_spmv_baseline.py generated both summary fil
 pairwise median result in this run: Eigen won 36/36 matrix/thread comparisons; SparseBench won 0/36
 ```
 
+Default Eigen-off build verification:
+
+```text
+one-off Slurm job: 34852283
+purpose: verify default CMake build remains Eigen-free
+commit printed by job: b669c2e6d8290c732250fea269d41014e6d3c55d
+node: n3468
+Slurm accounting state: COMPLETED
+Slurm accounting exit code: 0:0
+elapsed: 00:00:06
+stdout: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-default-eigen-off-34852283.out
+stderr: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-default-eigen-off-34852283.err
+stderr status: empty, 0 bytes
+build dir: /gscratch/scrubbed/junyej/sparsebench/build_default_34852283
+CTest: 3/3 tests passed
+Eigen target check: sparsebench_spmv_eigen was not produced in the default build
+```
+
 ### 12A.5 Acceptance criteria
 
 Plan C first pass acceptance is passed when all of these are true:
