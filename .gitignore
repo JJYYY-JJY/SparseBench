@@ -18,6 +18,7 @@ compile_commands.json
 *.a
 *.pdb
 *.ilk
+__pycache__/
 
 # Generated benchmark output
 results/**

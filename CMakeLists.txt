@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(SPARSEBENCH_USE_OPENMP "Use OpenMP for parallel kernels" ON)
+option(SPARSEBENCH_USE_EIGEN "Build Eigen baseline executables and tests" OFF)
 
 add_library(sparsebench_core
     src/csr.cpp
@@ -38,6 +39,19 @@ else()
     target_compile_options(sparsebench_spmv PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+if(SPARSEBENCH_USE_EIGEN)
+    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+
+    add_executable(sparsebench_spmv_eigen src/main_spmv_eigen.cpp)
+    target_link_libraries(sparsebench_spmv_eigen PRIVATE sparsebench_core Eigen3::Eigen)
+
+    if(MSVC)
+        target_compile_options(sparsebench_spmv_eigen PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(sparsebench_spmv_eigen PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endif()
+
 enable_testing()
 
 add_executable(sparsebench_tests tests/test_sparsebench.cpp)
@@ -67,6 +81,27 @@ add_test(
     NAME cli_diag5_csv_shape
     COMMAND "${CMAKE_COMMAND}"
         "-DCSV=${CLI_TEST_CSV}"
+        "-DEXPECTED_CHECKSUM=15"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli_csv.cmake"
 )
 set_tests_properties(cli_diag5_csv_shape PROPERTIES DEPENDS cli_diag5_csv)
+
+if(SPARSEBENCH_USE_EIGEN)
+    set(EIGEN_CLI_TEST_CSV "${CMAKE_CURRENT_BINARY_DIR}/eigen_cli_diag5.csv")
+    add_test(
+        NAME eigen_diag5_csv
+        COMMAND sparsebench_spmv_eigen
+            "${CMAKE_CURRENT_SOURCE_DIR}/data/tiny/diag5.mtx"
+            --threads 1
+            --repeat 3
+            --out "${EIGEN_CLI_TEST_CSV}"
+    )
+    add_test(
+        NAME eigen_diag5_csv_shape
+        COMMAND "${CMAKE_COMMAND}"
+            "-DCSV=${EIGEN_CLI_TEST_CSV}"
+            "-DEXPECTED_CHECKSUM=15"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli_csv.cmake"
+    )
+    set_tests_properties(eigen_diag5_csv_shape PROPERTIES DEPENDS eigen_diag5_csv)
+endif()

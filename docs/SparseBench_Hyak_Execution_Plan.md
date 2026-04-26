@@ -4,7 +4,7 @@
 
 **Suggested repo path.** `docs/hyak_execution_plan.md`
 
-**Current status as of 2026-04-25.** SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The medium manifest at `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` has been generated and validated with 6 parser-supported matrices. The 96-core medium `cpu-g2-mem2x` job `34825519` completed at commit `2fc974c0a4a0eea087f8e86dd5f54fe626992729` with `COMPLETED 0:0`, CTest `3/3`, empty stderr, and 48 CSVs covering 6 matrices across thread counts `1,2,4,8,16,32,64,96`; its package, checksum, and analysis summary are under `/gscratch/scrubbed/junyej/sparsebench/`. The 192-core Phase 8 job `34851174` has been submitted from a scrubbed-side Slurm script and is currently `PENDING` with reason `QOSGrpCpuLimit`; there are no 192-core result CSVs yet.
+**Current status as of 2026-04-25.** SuiteSparse ingestion, parser v0.1.1, real `cpu-g2` smoke, smoke evidence packaging, and the 32-core `cpu-g2-mem2x` pilot have passed on Hyak. The real smoke job was `34802647` at commit `820cba9fb10dc4f579b872a3cf93b5d7529982ea`; CTest passed `3/3`, `.err` was empty, real SuiteSparse CSVs were produced, and the smoke evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The `mem2x` pilot was job `34803037` at commit `5dc9ef099d752f581a947a6bb9f6c1153e90c952`; Slurm completed it with `COMPLETED 0:0`, CTest passed `3/3`, `.err` was empty, 24 real SuiteSparse CSVs covered 4 matrices and thread counts `1,2,4,8,16,32`, and the mem2x evidence archive/checksum were written under `/gscratch/scrubbed/junyej/sparsebench/`. The medium manifest at `/gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt` has been generated and validated with 6 parser-supported matrices. The 96-core medium `cpu-g2-mem2x` job `34825519` completed at commit `2fc974c0a4a0eea087f8e86dd5f54fe626992729` with `COMPLETED 0:0`, CTest `3/3`, empty stderr, and 48 CSVs covering 6 matrices across thread counts `1,2,4,8,16,32,64,96`; its package, checksum, and analysis summary are under `/gscratch/scrubbed/junyej/sparsebench/`. The 192-core Phase 8 job `34851174` has been submitted from a scrubbed-side Slurm script and is currently `PENDING` with reason `QOSGrpCpuLimit`; there are no 192-core result CSVs yet. Plan C has started with an Eigen C++ external baseline instead of SciPy/SuiteSparse/MKL: job `34852190` completed on `cpu-g2` with `COMPLETED 0:0`, CTest `5/5`, empty stderr, 72 paired SparseBench/Eigen CSVs for 6 medium matrices across thread counts `1,2,4,8,16,32`, and analysis files under `/gscratch/scrubbed/junyej/sparsebench/analysis/`.
 
 ---
 
@@ -30,6 +30,7 @@ Do **not** do these before the 192-core Phase 8 job completes and its logs/CSVs 
 - Do not add CG, GMRES, Lanczos, or other algorithms.
 - Do not run performance conclusions from `diag5.mtx` fallback data.
 - Do not treat `hyakalloc-all` global idle resources as guaranteed availability for this account.
+- Do not claim 192-core `cpu-g2-mem2x` completion from Plan C; Eigen baseline job `34852190` is a 32-core `cpu-g2` comparison run and job `34851174` remains a separate pending probe.
 
 ---
 
@@ -1090,6 +1091,156 @@ current blocker: scheduler QOS CPU limit; no 192-core logs, CSVs, package, or be
 
 ---
 
+## 12A. Plan C — Eigen external baseline on 32-core `cpu-g2`
+
+### 12A.1 Goal
+
+Add the first external SpMV baseline without waiting for the 192-core `cpu-g2-mem2x` probe. The first baseline is Eigen C++ via the existing Hyak module:
+
+```text
+cesg/eigen/3.3.9
+```
+
+This deliberately does **not** start with SciPy, SuiteSparse, or MKL because the current machine state does not provide a ready Python/SciPy stack or obvious SuiteSparse/MKL modules for this repo workflow.
+
+The baseline compares:
+
+```text
+SparseBench CSR SpMV vs Eigen SparseMatrix SpMV
+threads: 1,2,4,8,16,32
+repeat: 30
+manifest: /gscratch/scrubbed/junyej/sparsebench/data/medium_matrices.txt
+matrices: cant, consph, cop20k_A, mac_econ_fwd500, mc2depi, pdb1HYS
+```
+
+The 192-core job `34851174` remains useful as a background scheduling/scaling probe, but it is not a blocker for Plan C because the active `cpu-g2-mem2x` QOS cap is already enough to leave that job pending at `QOSGrpCpuLimit`.
+
+### 12A.2 Implementation record
+
+Code and workflow additions:
+
+```text
+CMake option: SPARSEBENCH_USE_EIGEN=ON/OFF, default OFF
+Eigen executable: sparsebench_spmv_eigen
+Eigen source: src/main_spmv_eigen.cpp
+Slurm script: slurm/spmv_eigen_baseline_cpu_g2.slurm
+Analysis script: scripts/analyze_spmv_baseline.py
+```
+
+The default build remains Eigen-free unless `-DSPARSEBENCH_USE_EIGEN=ON` is set. When enabled, CMake discovers `Eigen3`, builds `sparsebench_spmv_eigen`, and adds Eigen CTest coverage:
+
+```text
+eigen_diag5_csv
+eigen_diag5_csv_shape
+```
+
+The Eigen executable intentionally keeps the same CLI and raw CSV schema as `sparsebench_spmv`:
+
+```bash
+sparsebench_spmv_eigen <matrix.mtx> --threads N --repeat R --out results.csv
+```
+
+The Eigen path:
+
+- Reads Matrix Market files through the existing SparseBench parser.
+- Converts the resulting CSR to `Eigen::SparseMatrix<double, Eigen::RowMajor>`.
+- Excludes CSR-to-Eigen conversion from the timed loop.
+- Calls `Eigen::setNbThreads(threads)`.
+- Times only `y = A * x`.
+- Checks the Eigen result against SparseBench serial SpMV before writing CSV.
+- Uses `y.sum()` as the CSV checksum.
+
+### 12A.3 Slurm workflow
+
+The first real Plan C run uses `cpu-g2` rather than `cpu-g2-mem2x`:
+
+```text
+partition: cpu-g2
+qos: stf-cpu-g2
+cpus-per-task: 32
+memory: 128G
+time: 02:00:00
+build dir: /gscratch/scrubbed/$USER/sparsebench/build_eigen_${SLURM_JOB_ID}
+result dir: /gscratch/scrubbed/$USER/sparsebench/results/eigen_baseline_${SLURM_JOB_ID}
+analysis dir: /gscratch/scrubbed/$USER/sparsebench/analysis
+```
+
+Validation and submission commands:
+
+```bash
+cd /gscratch/stf/$USER/projects/SparseBench
+
+bash -n slurm/spmv_eigen_baseline_cpu_g2.slurm
+sbatch --test-only slurm/spmv_eigen_baseline_cpu_g2.slurm
+sbatch slurm/spmv_eigen_baseline_cpu_g2.slurm
+```
+
+Expected CSV coverage:
+
+```text
+6 matrices x 6 thread counts x 2 backends = 72 CSV files
+SparseBench filenames: sparsebench_<matrix>_t<threads>.csv
+Eigen filenames: eigen_<matrix>_t<threads>.csv
+```
+
+### 12A.4 Execution record
+
+```text
+script: slurm/spmv_eigen_baseline_cpu_g2.slurm
+bash -n slurm/spmv_eigen_baseline_cpu_g2.slurm: passed
+sbatch --test-only slurm/spmv_eigen_baseline_cpu_g2.slurm: accepted as test job 34852189
+test-only placement: node n3488, partition cpu-g2, 32 processors
+real baseline submission: submitted as job 34852190
+requested resources: 32 CPUs, 128G, 02:00:00
+partition: cpu-g2
+qos: stf-cpu-g2
+node: n3488
+submit time: 2026-04-25T19:34:57
+start time: 2026-04-25T19:34:58
+end time: 2026-04-25T19:36:29
+elapsed: 00:01:31
+Slurm accounting state: COMPLETED
+Slurm accounting exit code: 0:0
+commit printed by job: 8ec267e9658bd200f5223b817b029ea40d7c7053
+stdout: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-eigen-34852190.out
+stderr: /gscratch/scrubbed/junyej/sparsebench/logs/sbpp-spmv-eigen-34852190.err
+stderr status: empty, 0 bytes
+build dir: /gscratch/scrubbed/junyej/sparsebench/build_eigen_34852190
+result directory: /gscratch/scrubbed/junyej/sparsebench/results/eigen_baseline_34852190/
+analysis CSV: /gscratch/scrubbed/junyej/sparsebench/analysis/eigen_baseline_34852190_summary.csv
+analysis Markdown: /gscratch/scrubbed/junyej/sparsebench/analysis/eigen_baseline_34852190_summary.md
+CTest: 5/5 tests passed
+CSV count: 72
+matrices: cant, consph, cop20k_A, mac_econ_fwd500, mc2depi, pdb1HYS
+thread coverage per matrix/backend: 1,2,4,8,16,32
+repeat: 30
+CSV validation: every file has the expected header, one data row, repeat=30, positive median_ms/min_ms/nnz_per_sec, and finite checksum
+checksum validation: Eigen and SparseBench checksums match within tolerance for every matrix/thread pair
+analysis validation: scripts/analyze_spmv_baseline.py generated both summary files successfully
+pairwise median result in this run: Eigen won 36/36 matrix/thread comparisons; SparseBench won 0/36
+```
+
+### 12A.5 Acceptance criteria
+
+Plan C first pass acceptance is passed when all of these are true:
+
+- `SPARSEBENCH_USE_EIGEN` remains `OFF` by default.
+- `-DSPARSEBENCH_USE_EIGEN=ON` builds `sparsebench_spmv_eigen` with `cesg/eigen/3.3.9`.
+- CTest passes with the Eigen CTest pair included.
+- Slurm completes with `COMPLETED 0:0`.
+- Stderr is empty.
+- Exactly 72 CSVs are produced.
+- Analysis CSV and Markdown are produced by the stdlib-only script.
+- No README 192-core or broad benchmark conclusion is made from this 32-core `cpu-g2` baseline alone.
+
+Phase status:
+
+```text
+Plan C first pass acceptance: passed for job 34852190.
+```
+
+---
+
 ## 13. Phase 9 — Package, download, and plot mem2x results
 
 ### 13.1 Package on Hyak
@@ -1208,6 +1359,12 @@ Example limitation text:
 SparseBench++ v0.1 measures CSR SpMV only. The current implementation is designed as a reproducible CPU-only benchmark harness rather than a fully optimized sparse linear algebra library. Performance depends strongly on matrix sparsity pattern, row-length imbalance, memory bandwidth, and OpenMP scheduling.
 ```
 
+Plan C gating note:
+
+```text
+The Eigen external-baseline run `34852190` is valid report material for a 32-core `cpu-g2` comparison, but it must be labeled separately from the pending 192-core `cpu-g2-mem2x` probe. Do not merge Plan C results into a final 192-core benchmark claim unless the text explicitly distinguishes partition, QOS, thread range, and backend.
+```
+
 ---
 
 ## 15. Resume bullets
@@ -1245,7 +1402,7 @@ v0.1     CSR SpMV + Slurm smoke + mem2x scaling
 v0.1.1   Matrix Market parser variants: integer, pattern, symmetric
 v0.2     Conjugate Gradient for SPD matrices
 v0.3     Lanczos eigenvalue approximation
-v0.4     baseline comparison: Eigen / SuiteSparse / SciPy / MKL if available
+v0.4     baseline comparison: Eigen first, then SuiteSparse / SciPy / MKL if available
 v0.5     OpenMP scheduling experiments: static / dynamic / guided
 v0.6     NUMA and memory-placement experiments
 ```
@@ -1253,10 +1410,10 @@ v0.6     NUMA and memory-placement experiments
 Current priority:
 
 ```text
-1. Track 192-core job 34851174 until it leaves QOSGrpCpuLimit and either completes or fails with actionable logs.
-2. If 34851174 completes, verify COMPLETED 0:0, empty stderr, CTest 3/3, and 60 CSVs for 6 matrices x 10 threads.
-3. Package 34851174 with the same Phase 9 layout and generate 192-core speedup/efficiency analysis.
-4. Plot and document 96-core vs 192-core behavior, including memory-bandwidth limits and matrices that peak early.
+1. Commit and push the Plan C Eigen baseline implementation plus this execution-plan update.
+2. Treat job 34852190 as the first valid external-baseline evidence set: preserve the 72 CSVs and summary files, and use them only with a clear 32-core cpu-g2 label.
+3. Keep tracking 192-core job 34851174 as a background probe until it leaves QOSGrpCpuLimit and either completes or fails with actionable logs.
+4. If 34851174 completes, verify COMPLETED 0:0, empty stderr, CTest 3/3, and 60 CSVs for 6 matrices x 10 threads.
 5. Add CG/Lanczos only after SpMV benchmark reporting is stable.
 ```
 
@@ -1274,6 +1431,7 @@ Current priority:
 | 6. mem2x pilot | real manifest | `spmv_mem2x_scaling.slurm` with 32 cores | pilot CSVs | threads `1..32` CSVs |
 | 7. mem2x medium | 6 medium matrices | job `34825519` | 48 CSVs + package + analysis | `COMPLETED 0:0`, CTest `3/3`, empty stderr, exact thread coverage |
 | 8. mem2x full | same validated medium manifest for controlled probe | job `34851174` | pending 192-core run | currently blocked by `QOSGrpCpuLimit`; require 60 CSVs before conclusions |
+| 12A. Eigen baseline | 6 medium matrices | job `34852190` via `spmv_eigen_baseline_cpu_g2.slurm` | 72 SparseBench/Eigen CSVs + analysis | `COMPLETED 0:0`, CTest `5/5`, empty stderr, exact paired coverage |
 | 9. Reporting | final CSVs | plotting scripts | figures + README | benchmark section committed |
 
 ---
