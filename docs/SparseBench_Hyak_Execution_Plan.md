@@ -1077,6 +1077,7 @@ bash -n /gscratch/scrubbed/junyej/sparsebench/slurm/spmv_mem2x_192_20260425.slur
 sbatch --test-only /gscratch/scrubbed/junyej/sparsebench/slurm/spmv_mem2x_192_20260425.slurm: accepted as test job 34851157
 test-only placement: node n3443, partition cpu-g2-mem2x, 192 processors
 real 192-core submission: submitted as job 34851174
+duplicate cleanup: accidental duplicate job 34851657 was cancelled; keep only 34851174
 Slurm state at latest check: PENDING
 Slurm reason at latest check: QOSGrpCpuLimit
 submit time: 2026-04-25T18:41:58
