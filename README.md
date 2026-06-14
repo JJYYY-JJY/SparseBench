@@ -1,6 +1,18 @@
-# SparseBench++ v0.1.1
+# SparseBench++
 
-SparseBench++ is being initialized as a small, reproducible sparse-matrix benchmark harness. The current goal is correctness first: build the benchmark, run tiny deterministic SpMV cases, and only then scale the same workflow onto Hyak.
+SparseBench++ is a CPU-only sparse-matrix benchmark harness for Matrix Market
+ingestion, CSR SpMV, CTest-gated local checks, and Hyak Slurm runs.
+
+## Public Status
+
+- This repository has no GitHub release. The tag `v0.1-local` marks an earlier
+  local checkpoint, not a published artifact release.
+- The committed benchmark report records two completed Hyak evidence sets: job
+  `34825519` for 96-core `cpu-g2-mem2x` SparseBench scaling, and job `34852262`
+  for a 32-core `cpu-g2` SparseBench-versus-Eigen comparison.
+- The 192-core probe, job `34851174`, remains `PENDING` with `QOSGrpCpuLimit`.
+  It has no completed CSVs, logs, package, or benchmark conclusion in this
+  repository.
 
 ## Repository Layout
 
